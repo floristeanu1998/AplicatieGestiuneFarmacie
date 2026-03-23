@@ -89,7 +89,52 @@ namespace AplicatieGestiuneFarmacie
             Console.Write("Cantitate: ");
             int.TryParse(Console.ReadLine(), out int cantitate);
 
-            return new Medicament(id, denumire, pret, cantitate);
+            Console.WriteLine("\nAlegeti forma de prezentare:");
+            foreach(int i in Enum.GetValues(typeof(FormaPrezentare)))
+            {
+                Console.WriteLine($"{i} - {(FormaPrezentare)i} ");
+                
+            }
+            Console.Write("Optiune forma: ");
+            int.TryParse(Console.ReadLine(), out int optForma);
+
+            // Transformăm numărul în Enum. Dacă pune un număr greșit, se setează valoarea 1.
+            FormaPrezentare formaAlesa = (FormaPrezentare)optForma;
+            if (!Enum.IsDefined(typeof(FormaPrezentare), formaAlesa))
+            {
+                formaAlesa = FormaPrezentare.Comprimate; // valoare de siguranta
+            }
+
+            // --- 2. CITIRE CONDITII PASTRARE (Enum cu Flags) ---
+            Console.WriteLine("\nAlegeti conditiile de pastrare:");
+            Console.WriteLine("(Puteti alege mai multe introducand numerele separate prin virgula. Ex: 2, 8)");
+            foreach (int i in Enum.GetValues(typeof(ConditiiPastrare)))
+            {
+                Console.WriteLine($"{i} - {(ConditiiPastrare)i}");
+            }
+            Console.Write("Optiuni conditii: ");
+            string inputConditii = Console.ReadLine();
+
+            // Începem de la 0 (niciuna)
+            ConditiiPastrare conditiiAlese = 0;
+
+            // Spargem textul "2, 8" într-un vector de texte ["2", " 8"]
+            string[] valoriIntroduse = inputConditii.Split(',');
+
+            foreach (string val in valoriIntroduse)
+            {
+                // .Trim() taie spatiile goale puse din greseala
+                if (int.TryParse(val.Trim(), out int optiuneConditie))
+                {
+                    // Combinăm condițiile folosind operatorul | (OR pe biți)
+                    conditiiAlese = conditiiAlese | (ConditiiPastrare)optiuneConditie;
+                }
+            }
+
+            // Returnăm noul obiect folosind constructorul cu 6 parametri!
+            return new Medicament(id, denumire, pret, cantitate, formaAlesa, conditiiAlese);
+
+
         }
 
         // METODĂ PENTRU AFIȘARE (Interfața cu utilizatorul)
