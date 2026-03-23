@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace AplicatieGestiuneFarmacie
 {
@@ -6,49 +7,106 @@ namespace AplicatieGestiuneFarmacie
     {
         static void Main()
         {
-            // 1. Creăm medicamentele (acum cu ID unic, conform cerinței)
-            Medicament m1 = new Medicament(101, "Paracetamol", 15.5, 50);
-            Medicament m2 = new Medicament(102, "Nurofen", 28.0, 30);
-            Medicament m3 = new Medicament(103, "Aspirina", 12.0, 0); // Stoc 0
-            Medicament m4 = new Medicament(104, "Vitamina C", 35.0, 100);
+            // Inițializăm farmacia
+            Farmacie farmaciaMea = new Farmacie("Catena", "Str. Stefan cel Mare 1", "Bucuresti");
+            string optiune;
 
-            // 2. Creăm două farmacii diferite
-            Farmacie farmaciaBucuresti = new Farmacie("Catena", "Str. Mare 1", "Bucuresti");
-            Farmacie farmaciaIasi = new Farmacie("Dr. Max", "Bd. Copou 5", "Iasi");
-
-            // 3. Adăugăm medicamentele în stocul FIECĂREI farmacii în parte
-            Console.WriteLine("--- Aprovizionare Farmacia Bucuresti ---");
-            farmaciaBucuresti.ManagerStoc.AdaugaMedicament(m1);
-            farmaciaBucuresti.ManagerStoc.AdaugaMedicament(m2);
-
-            Console.WriteLine("\n--- Aprovizionare Farmacia Iasi ---");
-            farmaciaIasi.ManagerStoc.AdaugaMedicament(m3);
-            farmaciaIasi.ManagerStoc.AdaugaMedicament(m4);
-
-            // 4. Afișăm stocurile individuale
-            farmaciaBucuresti.ManagerStoc.AfiseazaStoc(farmaciaBucuresti);
-            farmaciaIasi.ManagerStoc.AfiseazaStoc(farmaciaIasi);
-
-            // 5. TESTĂM CĂUTAREA 
-            Console.WriteLine("=== CAUTARE MEDICAMENT IN BUCURESTI ===");
-            Console.Write("Introdu numele medicamentului pe care il cauti: ");
-            string numeCautat = Console.ReadLine();
-
-            // Apelăm metoda de căutare din managerul farmaciei din București
-            Medicament rezultat = farmaciaBucuresti.ManagerStoc.CautaMedicamentDupaNume(numeCautat);
-
-            if (rezultat != null)
+            do
             {
-                Console.WriteLine("\nMedicament Gasit!");
-                Console.WriteLine(rezultat.Info());
+                Console.WriteLine("\n--- MENIU GESTIUNE FARMACIE ---");
+                Console.WriteLine("C. Citire si adăugare medicament");
+                Console.WriteLine("A. Afisare stoc complet");
+                Console.WriteLine("F. Căutare medicament dupa nume");
+                Console.WriteLine("E. Eliminare medicament dupa nume");
+                Console.WriteLine("X. Iesire");
+                Console.Write("Alegeti o optiune: ");
+
+                optiune = Console.ReadLine()?.ToUpper() ?? string.Empty; // ?. -> daca e null, nu da eroare, ci returneaza null, iar ?? -> daca e null, returneaza string.Empty
+
+                switch (optiune)
+                {
+                    case "C":
+                        Medicament medNou = CitireMedicamentTastatura();
+                        farmaciaMea.ManagerStoc.AdaugaMedicament(medNou);
+                        Console.WriteLine("Medicament adăugat cu succes!");
+                        break;
+
+                    case "A":
+                        List<Medicament> medicamente = farmaciaMea.ManagerStoc.GetStoc();
+                        AfisareMedicamente(medicamente, farmaciaMea);
+                        break;
+
+                    case "F":
+                        Console.Write("Introduceti numele cautat: ");
+                        string nume = Console.ReadLine();
+                        Medicament gasit = farmaciaMea.ManagerStoc.CautaMedicamentDupaNume(nume);
+                        if (gasit != null)
+                            Console.WriteLine(gasit.Info());
+                        else
+                            Console.WriteLine("Medicamentul nu a fost gasit.");
+                        break;
+
+                    case "E":
+                        Console.Write("Introduceti numele medicamentului de eliminat: ");
+                        string numeDeSters = Console.ReadLine();
+
+                        bool succes= farmaciaMea.ManagerStoc.StergeMedicamentDupaNume(numeDeSters); // va fi true daca s-a sters, false daca nu s-a gasit
+                        
+                        if (succes)
+                        {
+                            Console.WriteLine($"Medicamentul '{numeDeSters}' a fost eliminat din stoc");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Medicamentul nu a fost gasit, deci nu s-a sters nimic.");
+                        }
+
+                        break;
+
+                    case "X":
+                        Console.WriteLine("Inchidere program...");
+                        break;
+
+                    default:
+                        Console.WriteLine("Optiune invalida!");
+                        break;
+                }
+            } while (optiune != "X");
+        }
+
+        // METODĂ PENTRU CITIRE (Interfața cu utilizatorul)
+        public static Medicament CitireMedicamentTastatura()
+        {
+            Console.Write("ID: ");
+            int.TryParse(Console.ReadLine(), out int id);
+
+            Console.Write("Denumire: ");
+            string denumire = Console.ReadLine();
+
+            Console.Write("Pret: ");
+            double.TryParse(Console.ReadLine(), out double pret);
+
+            Console.Write("Cantitate: ");
+            int.TryParse(Console.ReadLine(), out int cantitate);
+
+            return new Medicament(id, denumire, pret, cantitate);
+        }
+
+        // METODĂ PENTRU AFIȘARE (Interfața cu utilizatorul)
+        public static void AfisareMedicamente(List<Medicament> medicamente, Farmacie farmacie)
+        {
+            Console.WriteLine($"\nSTOC PENTRU: {farmacie.InfoFarmacie()}");
+            if (medicamente.Count == 0)
+            {
+                Console.WriteLine("Stocul este gol.");
             }
             else
             {
-                Console.WriteLine($"\nNe pare rau, dar {numeCautat} nu exista in stocul farmaciei din Bucuresti.");
+                foreach (var med in medicamente)
+                {
+                    Console.WriteLine(med.Info());
+                }
             }
-
-            Console.WriteLine("\nApasati orice tasta pentru a inchide...");
-            Console.ReadKey();
         }
     }
 }
