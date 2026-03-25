@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace AplicatieGestiuneFarmacie
+namespace LibrarieModele
     {
 
     public enum FormaPrezentare // Enum simplu , o singura valoare posibila.

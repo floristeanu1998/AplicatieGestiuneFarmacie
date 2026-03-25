@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using LibrarieModele;
+using NivelStocareDate;
 
 namespace AplicatieGestiuneFarmacie
 {
@@ -7,8 +9,9 @@ namespace AplicatieGestiuneFarmacie
     {
         static void Main()
         {
-            // Inițializăm farmacia
+            // Acum avem doua obiecte separate: farmacia si administratorul de stoc
             Farmacie farmaciaMea = new Farmacie("Catena", "Str. Stefan cel Mare 1", "Bucuresti");
+            AdministrareStoc managerStoc = new AdministrareStoc();
             string optiune;
 
             do
@@ -21,25 +24,25 @@ namespace AplicatieGestiuneFarmacie
                 Console.WriteLine("X. Iesire");
                 Console.Write("Alegeti o optiune: ");
 
-                optiune = Console.ReadLine()?.ToUpper() ?? string.Empty; // ?. -> daca e null, nu da eroare, ci returneaza null, iar ?? -> daca e null, returneaza string.Empty
+                optiune = Console.ReadLine()?.ToUpper() ?? string.Empty;
 
                 switch (optiune)
                 {
                     case "C":
                         Medicament medNou = CitireMedicamentTastatura();
-                        farmaciaMea.ManagerStoc.AdaugaMedicament(medNou);
+                        managerStoc.AdaugaMedicament(medNou);
                         Console.WriteLine("Medicament adăugat cu succes!");
                         break;
 
                     case "A":
-                        List<Medicament> medicamente = farmaciaMea.ManagerStoc.GetStoc();
+                        List<Medicament> medicamente = managerStoc.GetStoc();
                         AfisareMedicamente(medicamente, farmaciaMea);
                         break;
 
                     case "F":
                         Console.Write("Introduceti numele cautat: ");
                         string nume = Console.ReadLine();
-                        Medicament gasit = farmaciaMea.ManagerStoc.CautaMedicamentDupaNume(nume);
+                        Medicament gasit = managerStoc.CautaMedicamentDupaNume(nume);
                         if (gasit != null)
                             Console.WriteLine(gasit.Info());
                         else
@@ -50,17 +53,12 @@ namespace AplicatieGestiuneFarmacie
                         Console.Write("Introduceti numele medicamentului de eliminat: ");
                         string numeDeSters = Console.ReadLine();
 
-                        bool succes= farmaciaMea.ManagerStoc.StergeMedicamentDupaNume(numeDeSters); // va fi true daca s-a sters, false daca nu s-a gasit
-                        
-                        if (succes)
-                        {
-                            Console.WriteLine($"Medicamentul '{numeDeSters}' a fost eliminat din stoc");
-                        }
-                        else
-                        {
-                            Console.WriteLine("Medicamentul nu a fost gasit, deci nu s-a sters nimic.");
-                        }
+                        bool succes = managerStoc.StergeMedicamentDupaNume(numeDeSters);
 
+                        if (succes)
+                            Console.WriteLine($"Medicamentul '{numeDeSters}' a fost eliminat din stoc");
+                        else
+                            Console.WriteLine("Medicamentul nu a fost gasit, deci nu s-a sters nimic.");
                         break;
 
                     case "X":
@@ -74,7 +72,6 @@ namespace AplicatieGestiuneFarmacie
             } while (optiune != "X");
         }
 
-        // METODĂ PENTRU CITIRE (Interfața cu utilizatorul)
         public static Medicament CitireMedicamentTastatura()
         {
             Console.Write("ID: ");
@@ -90,22 +87,19 @@ namespace AplicatieGestiuneFarmacie
             int.TryParse(Console.ReadLine(), out int cantitate);
 
             Console.WriteLine("\nAlegeti forma de prezentare:");
-            foreach(int i in Enum.GetValues(typeof(FormaPrezentare)))
+            foreach (int i in Enum.GetValues(typeof(FormaPrezentare)))
             {
                 Console.WriteLine($"{i} - {(FormaPrezentare)i} ");
-                
             }
             Console.Write("Optiune forma: ");
             int.TryParse(Console.ReadLine(), out int optForma);
 
-            // Transformăm numărul în Enum. Dacă pune un număr greșit, se setează valoarea 1.
             FormaPrezentare formaAlesa = (FormaPrezentare)optForma;
             if (!Enum.IsDefined(typeof(FormaPrezentare), formaAlesa))
             {
-                formaAlesa = FormaPrezentare.Comprimate; // valoare de siguranta
+                formaAlesa = FormaPrezentare.Comprimate;
             }
 
-            // --- 2. CITIRE CONDITII PASTRARE (Enum cu Flags) ---
             Console.WriteLine("\nAlegeti conditiile de pastrare:");
             Console.WriteLine("(Puteti alege mai multe introducand numerele separate prin virgula. Ex: 2, 8)");
             foreach (int i in Enum.GetValues(typeof(ConditiiPastrare)))
@@ -115,29 +109,20 @@ namespace AplicatieGestiuneFarmacie
             Console.Write("Optiuni conditii: ");
             string inputConditii = Console.ReadLine();
 
-            // Începem de la 0 (niciuna)
             ConditiiPastrare conditiiAlese = 0;
-
-            // Spargem textul "2, 8" într-un vector de texte ["2", " 8"]
             string[] valoriIntroduse = inputConditii.Split(',');
 
             foreach (string val in valoriIntroduse)
             {
-                // .Trim() taie spatiile goale puse din greseala
                 if (int.TryParse(val.Trim(), out int optiuneConditie))
                 {
-                    // Combinăm condițiile folosind operatorul | (OR pe biți)
                     conditiiAlese = conditiiAlese | (ConditiiPastrare)optiuneConditie;
                 }
             }
 
-            // Returnăm noul obiect folosind constructorul cu 6 parametri!
             return new Medicament(id, denumire, pret, cantitate, formaAlesa, conditiiAlese);
-
-
         }
 
-        // METODĂ PENTRU AFIȘARE (Interfața cu utilizatorul)
         public static void AfisareMedicamente(List<Medicament> medicamente, Farmacie farmacie)
         {
             Console.WriteLine($"\nSTOC PENTRU: {farmacie.InfoFarmacie()}");
