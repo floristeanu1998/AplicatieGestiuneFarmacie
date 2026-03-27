@@ -9,9 +9,27 @@ namespace AplicatieGestiuneFarmacie
     {
         static void Main()
         {
-            // Acum avem doua obiecte separate: farmacia si administratorul de stoc
-            Farmacie farmaciaMea = new Farmacie("Catena", "Str. Stefan cel Mare 1", "Bucuresti");
-            AdministrareStoc managerStoc = new AdministrareStoc();
+            // Cerem de la fabrica ambii manageri
+            IStocareData managerStoc = StocareFactory.GetAdministratorStocare();
+            IStocareFarmacii managerFarmacii = StocareFactory.GetAdministratorFarmacii();
+
+            // Verificam daca avem farmacii salvate in fisier
+            List<Farmacie> listaFarmacii = managerFarmacii.GetFarmacii();
+            Farmacie farmaciaMea;
+
+            if (listaFarmacii.Count == 0)
+            {
+                // Daca e prima data cand rulam si fisierul e gol, cream farmacia si o SALVAM
+                farmaciaMea = new Farmacie("Catena", "Str. Stefan cel Mare 1", "Bucuresti");
+                managerFarmacii.AdaugaFarmacie(farmaciaMea);
+                Console.WriteLine("Farmacie noua salvata pe disc cu succes!");
+            }
+            else
+            {
+                // Daca exista deja in fisier, o incarcam pe prima!
+                farmaciaMea = listaFarmacii[0];
+                Console.WriteLine($"Farmacie incarcata din fisier: {farmaciaMea.Nume}");
+            }
             string optiune;
 
             do

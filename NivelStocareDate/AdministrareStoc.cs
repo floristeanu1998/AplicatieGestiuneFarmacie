@@ -5,7 +5,7 @@ using LibrarieModele;
 
 namespace NivelStocareDate
 {
-    public class AdministrareStoc
+    public class AdministrareStoc : IStocareData // Adaugat : IStocareData pentru implemetarea interfetei
     {
         private List<Medicament> stoc;
 
