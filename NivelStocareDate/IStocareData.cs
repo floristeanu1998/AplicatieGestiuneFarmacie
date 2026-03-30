@@ -10,5 +10,7 @@ namespace NivelStocareDate
         List<Medicament> GetStoc();
         Medicament CautaMedicamentDupaNume(string DenumireCautata);
         bool StergeMedicamentDupaNume(string nume);
+
+        bool VanzareMedicament(string nume, int cantitateVanduta);
     }
 }

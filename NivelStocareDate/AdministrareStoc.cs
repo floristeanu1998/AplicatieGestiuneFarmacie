@@ -34,5 +34,16 @@ namespace NivelStocareDate
             int elementeSterse = stoc.RemoveAll(m => m.Denumire.Equals(nume, StringComparison.OrdinalIgnoreCase));
             return elementeSterse > 0;
         }
+        public bool VanzareMedicament(string nume, int cantitateVanduta)
+        {
+            Medicament medGasit = stoc.FirstOrDefault(m => m.Denumire.Equals(nume, StringComparison.OrdinalIgnoreCase));
+
+            if (medGasit != null && medGasit.CantitateStoc >= cantitateVanduta)
+            {
+                medGasit.CantitateStoc -= cantitateVanduta; // Scade direct din lista din memorie
+                return true;
+            }
+            return false;
+        }
     }
 }

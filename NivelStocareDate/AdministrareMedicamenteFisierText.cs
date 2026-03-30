@@ -89,5 +89,27 @@ namespace NivelStocareDate
 
             return elementeSterse > 0;
         }
+
+        public bool VanzareMedicament(string nume, int cantitateVanduta) 
+        { 
+            List<Medicament> stoc = GetStoc(); // Citim tot din fisier
+
+            Medicament medGasit = stoc.FirstOrDefault(m => m.Denumire.Equals(nume, StringComparison.OrdinalIgnoreCase)); // Cautare medicament dupa nume 
+            if (medGasit != null && medGasit.CantitateStoc >= cantitateVanduta) 
+            { 
+                medGasit.CantitateStoc -= cantitateVanduta; 
+                // Rescriem tot fisierul cu noua cantitate 
+                using (StreamWriter streamWriterFisierText = new StreamWriter(numeFisier, false)) 
+                { 
+                    foreach (Medicament m in stoc) 
+                    { 
+                        streamWriterFisierText.WriteLine(m.ConversieLaSirPentruFisier()); 
+                    } 
+                } 
+                return true; 
+            } 
+            return false;
+        }
+        
     }
 }

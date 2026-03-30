@@ -39,6 +39,7 @@ namespace AplicatieGestiuneFarmacie
                 Console.WriteLine("A. Afisare stoc complet");
                 Console.WriteLine("F. Căutare medicament dupa nume");
                 Console.WriteLine("E. Eliminare medicament dupa nume");
+                Console.WriteLine("V. Vanzare medicament");
                 Console.WriteLine("X. Iesire");
                 Console.Write("Alegeti o optiune: ");
 
@@ -78,6 +79,28 @@ namespace AplicatieGestiuneFarmacie
                         else
                             Console.WriteLine("Medicamentul nu a fost gasit, deci nu s-a sters nimic.");
                         break;
+
+                    case "V":
+                        Console.Write("Introduceti numele medicamentului dorit: ");
+                        string numeVanzare = Console.ReadLine();
+
+                        Console.Write("Cate bucati doriti sa vindeti? ");
+                        int.TryParse(Console.ReadLine(), out int cantitateVanduta);
+
+                       
+                        bool succesVanzare = managerStoc.VanzareMedicament(numeVanzare, cantitateVanduta);
+
+                        if (succesVanzare)
+                        {
+                            Console.WriteLine($"Vanzare reusita! Au fost scazute {cantitateVanduta} bucati de '{numeVanzare}'.");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Eroare la vanzare! Fie medicamentul nu exista, fie stocul este prea mic.");
+                        }
+                        break;
+
+
 
                     case "X":
                         Console.WriteLine("Inchidere program...");
