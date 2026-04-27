@@ -1,33 +1,112 @@
 ﻿<Window x:Class="FarmacieUI_WPF.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Gestiune Farmacie - Adăugare Medicament" Height="500" Width="400"
+        Title="Gestiune Farmacie - Lab 8" 
+        MinWidth="800" MinHeight="600" Height="650" Width="900"
         Background="#F4F6F6">
 
-    <Grid Margin="20">
-        <Border BorderBrush="#BDC3C7" BorderThickness="1" CornerRadius="8" Background="White" Padding="20">
-            <StackPanel>
-                <Label Content="Adaugă Medicament Nou" FontSize="20" FontWeight="Bold" Foreground="#2C3E50" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+    <Window.Resources>
+        <Style TargetType="Label">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#34495E"/>
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="5,0"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+    </Window.Resources>
 
-                <Label Content="_Denumire (max 30 caractere):" Target="{Binding ElementName=txtDenumire}" FontWeight="Bold" Padding="0" Margin="0,0,0,5"/>
-                <TextBox x:Name="txtDenumire" Height="30" Padding="5,0" VerticalContentAlignment="Center"/>
-                <TextBlock x:Name="tbErrDenumire" Foreground="Red" FontSize="11" Margin="0,2,0,10" Visibility="Collapsed"/>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
-                <Label Content="_Preț (RON):" Target="{Binding ElementName=txtPret}" FontWeight="Bold" Padding="0" Margin="0,0,0,5"/>
-                <TextBox x:Name="txtPret" Height="30" Padding="5,0" VerticalContentAlignment="Center"/>
-                <TextBlock x:Name="tbErrPret" Foreground="Red" FontSize="11" Margin="0,2,0,10" Visibility="Collapsed"/>
-
-                <Label Content="_Cantitate în stoc:" Target="{Binding ElementName=txtStoc}" FontWeight="Bold" Padding="0" Margin="0,0,0,5"/>
-                <TextBox x:Name="txtStoc" Height="30" Padding="5,0" VerticalContentAlignment="Center"/>
-                <TextBlock x:Name="tbErrStoc" Foreground="Red" FontSize="11" Margin="0,2,0,10" Visibility="Collapsed"/>
-
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,0">
-                    <Button x:Name="btnAdauga" Content="Adaugă" Width="100" Height="35" Margin="0,0,10,0" Background="#27AE60" Foreground="White" FontWeight="Bold" Click="btnAdauga_Click"/>
-                    <Button x:Name="btnReset" Content="Reset" Width="100" Height="35" Background="#95A5A6" Foreground="White" FontWeight="Bold" Click="btnReset_Click"/>
-                </StackPanel>
-
-                <Label x:Name="lblMesajStatus" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,15,0,0"/>
+        <Border Grid.Column="0" Background="#2C3E50" Padding="10">
+            <StackPanel Margin="0,20,0,0">
+                <TextBlock Text="FARMACIE" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,30"/>
+                <Button x:Name="btnMeniuAdauga" Content="➕ Adaugă Medicament" Height="40" Background="#34495E" Foreground="White" BorderThickness="0" Margin="0,0,0,10" Click="btnMeniuAdauga_Click"/>
+                <Button x:Name="btnMeniuCauta" Content="🔍 Caută Medicament" Height="40" Background="#34495E" Foreground="White" BorderThickness="0" Click="btnMeniuCauta_Click"/>
             </StackPanel>
         </Border>
+
+        <Grid Grid.Column="1" Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel x:Name="panouAdaugare" Grid.Row="0" Visibility="Visible">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                        <Label Content="Denumire:"/>
+                        <TextBox x:Name="txtDenumire"/>
+
+                        <Label Content="Preț (RON):" Margin="0,10,0,0"/>
+                        <TextBox x:Name="txtPret"/>
+
+                        <Label Content="Stoc:" Margin="0,10,0,0"/>
+                        <TextBox x:Name="txtStoc"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="10,0,0,0">
+
+                        <Label Content="Forma de prezentare:"/>
+                        <WrapPanel Margin="0,5,0,10">
+                            <RadioButton x:Name="rbComprimate" Content="Comprimate" GroupName="Forma" IsChecked="True" Margin="0,0,10,5"/>
+                            <RadioButton x:Name="rbSirop" Content="Sirop" GroupName="Forma" Margin="0,0,10,5"/>
+                            <RadioButton x:Name="rbUnguent" Content="Unguent" GroupName="Forma" Margin="0,0,10,5"/>
+                            <RadioButton x:Name="rbSolutie" Content="Soluție Inj." GroupName="Forma" Margin="0,0,10,5"/>
+                        </WrapPanel>
+
+                        <Label Content="Condiții de păstrare:"/>
+                        <Border BorderBrush="LightGray" BorderThickness="1" Padding="5">
+                            <WrapPanel>
+                                <CheckBox x:Name="chkTempCamerei" Content="Temp. camerei" Margin="5"/>
+                                <CheckBox x:Name="chkRefrigerare" Content="Refrigerare" Margin="5"/>
+                                <CheckBox x:Name="chkCongelare" Content="Congelare" Margin="5"/>
+                                <CheckBox x:Name="chkLumina" Content="Ferit de lumină" Margin="5"/>
+                                <CheckBox x:Name="chkUmiditate" Content="Ferit de umiditate" Margin="5"/>
+                            </WrapPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+
+                <Button x:Name="btnSalveaza" Content="Salvează Medicament" Width="180" Height="35" Background="#27AE60" Foreground="White" FontWeight="Bold" Margin="0,20,0,0" HorizontalAlignment="Left" Click="btnSalveaza_Click"/>
+            </StackPanel>
+
+            <Border x:Name="panouCautare" Grid.Row="0" Visibility="Collapsed" Background="#E8ECEF" Padding="15" CornerRadius="5">
+                <StackPanel>
+                    <Label Content="Caută după denumire:"/>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBox x:Name="txtCautare" Width="250" Margin="0,0,10,0"/>
+                        <Button x:Name="btnExecutaCautare" Content="Caută" Width="100" Background="#2980B9" Foreground="White" Click="btnExecutaCautare_Click"/>
+                        <Button x:Name="btnAfiseazaToti" Content="Arată Toți" Width="100" Margin="10,0,0,0" Background="#95A5A6" Foreground="White" Click="btnAfiseazaToti_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Label x:Name="lblStatus" Grid.Row="1" Margin="0,10,0,10" Foreground="Green" HorizontalAlignment="Center"/>
+
+            <DataGrid x:Name="dgMedicamente" Grid.Row="2" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" AlternatingRowBackground="#F9F9F9">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ID" Binding="{Binding IdMedicament}" Width="50"/>
+                    <DataGridTextColumn Header="Denumire" Binding="{Binding Denumire}" Width="150"/>
+                    <DataGridTextColumn Header="Preț (RON)" Binding="{Binding Pret}" Width="80"/>
+                    <DataGridTextColumn Header="Stoc" Binding="{Binding CantitateStoc}" Width="60"/>
+                    <DataGridTextColumn Header="Formă" Binding="{Binding Forma}" Width="100"/>
+                    <DataGridTextColumn Header="Condiții" Binding="{Binding Conditii}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+        </Grid>
     </Grid>
 </Window>

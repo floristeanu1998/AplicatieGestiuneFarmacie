@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using LibrarieModele;
-using NivelStocareDate; 
+using NivelStocareDate;
 
 namespace FarmacieUI_WPF
 {
@@ -10,127 +12,116 @@ namespace FarmacieUI_WPF
     {
         private IStocareData adminMedicamente;
 
-        // 1. Definim constantele pentru limitele de validare (Cerința din Tema Acasă)
-        private const int LUNGIME_MAXIMA_DENUMIRE = 30;
-        private const double PRET_MINIM = 0.1;
-        private const int STOC_MINIM = 0;
-
-        // 2. Enumerare pentru codurile de eroare
-        private enum CodEroare
-        {
-            Valid = 0,
-            DenumireInvalida = 1,
-            PretInvalid = 2,
-            StocInvalid = 3
-        }
-
         public MainWindow()
         {
             InitializeComponent();
-
-            // Inițializăm salvarea în fișier 
-            // Dacă ai o clasă StocareFactory ca la studenți, o poți folosi. Altfel, instanțiem direct:
             adminMedicamente = new AdministrareMedicamenteFisierText("Medicamente.txt");
+
+            // Incarcam datele in tabel la pornire
+            AfiseazaInTabel(adminMedicamente.GetStoc());
         }
 
-        // Metoda de validare cu returnare de cod de eroare
-        private CodEroare ValideazaDateMedicament(string denumire, string pretStr, string stocStr)
+        // ================= MENIU VERTICAL =================
+        private void btnMeniuAdauga_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(denumire) || denumire.Length > LUNGIME_MAXIMA_DENUMIRE)
-                return CodEroare.DenumireInvalida;
-
-            if (!double.TryParse(pretStr, out double pret) || pret < PRET_MINIM)
-                return CodEroare.PretInvalid;
-
-            if (!int.TryParse(stocStr, out int stoc) || stoc < STOC_MINIM)
-                return CodEroare.StocInvalid;
-
-            return CodEroare.Valid;
+            panouAdaugare.Visibility = Visibility.Visible;
+            panouCautare.Visibility = Visibility.Collapsed;
+            lblStatus.Content = "";
         }
 
-        // Evenimentul pentru butonul Adaugă
-        private void btnAdauga_Click(object sender, RoutedEventArgs e)
+        private void btnMeniuCauta_Click(object sender, RoutedEventArgs e)
         {
-            AscundeErori();
-            lblMesajStatus.Content = "";
+            panouAdaugare.Visibility = Visibility.Collapsed;
+            panouCautare.Visibility = Visibility.Visible;
+            lblStatus.Content = "";
+        }
 
-            string denumire = txtDenumire.Text.Trim();
-            string pretStr = txtPret.Text.Trim();
-            string stocStr = txtStoc.Text.Trim();
-
-            // Apelăm metoda de validare
-            CodEroare rezultatValidare = ValideazaDateMedicament(denumire, pretStr, stocStr);
-
-            if (rezultatValidare != CodEroare.Valid)
+        // ================= SALVARE MEDICAMENT =================
+        private void btnSalveaza_Click(object sender, RoutedEventArgs e)
+        {
+            try
             {
-                // Schimbăm culorile dacă sunt erori
-                MarcheazaEroare(rezultatValidare);
-                return; // Oprim execuția, nu salvăm date greșite
+                // 1. Preluare texte
+                string denumire = txtDenumire.Text;
+                double pret = Convert.ToDouble(txtPret.Text);
+                int stoc = Convert.ToInt32(txtStoc.Text);
+
+                // 2. Extragere valoare RadioButtons (Forma Prezentare)
+                FormaPrezentare forma = FormaPrezentare.Comprimate; // Default
+                if (rbSirop.IsChecked == true) forma = FormaPrezentare.Sirop;
+                else if (rbUnguent.IsChecked == true) forma = FormaPrezentare.Unguent;
+                else if (rbSolutie.IsChecked == true) forma = FormaPrezentare.SolutieInjectabila;
+
+                // 3. Extragere valori CheckBoxes (Conditii Pastrare folosind operatii pe biti datorita [Flags])
+                ConditiiPastrare conditii = 0; // Incepem de la 0
+                if (chkTempCamerei.IsChecked == true) conditii |= ConditiiPastrare.TemperaturaCamerei;
+                if (chkRefrigerare.IsChecked == true) conditii |= ConditiiPastrare.Refrigerare;
+                if (chkCongelare.IsChecked == true) conditii |= ConditiiPastrare.Congelare;
+                if (chkLumina.IsChecked == true) conditii |= ConditiiPastrare.FeritDeLumina;
+                if (chkUmiditate.IsChecked == true) conditii |= ConditiiPastrare.FeritDeUmiditate;
+
+                // Validare mica: Daca nu a bifat nimic, punem implicit Temp Camerei
+                if (conditii == 0) conditii = ConditiiPastrare.TemperaturaCamerei;
+
+                // 4. Generare ID simplu (cautam cel mai mare ID curent si adaugam 1)
+                int nextId = adminMedicamente.GetStoc().Any() ? adminMedicamente.GetStoc().Max(m => m.IdMedicament) + 1 : 1;
+
+                // 5. Creare obiect si salvare
+                Medicament med = new Medicament(nextId, denumire, pret, stoc, forma, conditii);
+                adminMedicamente.AdaugaMedicament(med);
+
+                lblStatus.Foreground = Brushes.Green;
+                lblStatus.Content = "Medicament salvat cu succes!";
+
+                // Resetam casutele de text
+                txtDenumire.Clear(); txtPret.Clear(); txtStoc.Clear();
+
+                // Reimprospatam DataGrid-ul
+                AfiseazaInTabel(adminMedicamente.GetStoc());
             }
-
-            // Transformăm string-urile în numere (știm că e sigur, au trecut de validare)
-            double pret = Convert.ToDouble(pretStr);
-            int stoc = Convert.ToInt32(stocStr);
-
-            // Creăm obiectul (setăm Forma și Conditiile la niste valori default pentru acest formular simplu)
-            Medicament medicamentNou = new Medicament(0, denumire, pret, stoc, FormaPrezentare.Comprimate, ConditiiPastrare.TemperaturaCamerei);
-
-            // Salvăm în fișier
-            adminMedicamente.AdaugaMedicament(medicamentNou);
-
-            lblMesajStatus.Foreground = Brushes.Green;
-            lblMesajStatus.Content = "Medicament adăugat cu succes!";
-
-            CurataCampuri();
-        }
-
-        // Evenimentul pentru butonul Reset
-        private void btnReset_Click(object sender, RoutedEventArgs e)
-        {
-            CurataCampuri();
-            AscundeErori();
-            lblMesajStatus.Content = "";
-        }
-
-        // Metode ajutătoare pentru interfață
-        private void CurataCampuri()
-        {
-            txtDenumire.Clear();
-            txtPret.Clear();
-            txtStoc.Clear();
-        }
-
-        private void MarcheazaEroare(CodEroare cod)
-        {
-            switch (cod)
+            catch (Exception)
             {
-                case CodEroare.DenumireInvalida:
-                    txtDenumire.Background = Brushes.LightPink;
-                    tbErrDenumire.Text = $"Numele este obligatoriu și max {LUNGIME_MAXIMA_DENUMIRE} caractere!";
-                    tbErrDenumire.Visibility = Visibility.Visible;
-                    break;
-                case CodEroare.PretInvalid:
-                    txtPret.Background = Brushes.LightPink;
-                    tbErrPret.Text = "Prețul trebuie să fie un număr valid, mai mare ca 0!";
-                    tbErrPret.Visibility = Visibility.Visible;
-                    break;
-                case CodEroare.StocInvalid:
-                    txtStoc.Background = Brushes.LightPink;
-                    tbErrStoc.Text = "Stocul trebuie să fie un număr întreg pozitiv!";
-                    tbErrStoc.Visibility = Visibility.Visible;
-                    break;
+                lblStatus.Foreground = Brushes.Red;
+                lblStatus.Content = "Eroare la date! Asigurați-vă că prețul și stocul sunt numere.";
             }
         }
 
-        private void AscundeErori()
+        // CAUTARE 
+        private void btnExecutaCautare_Click(object sender, RoutedEventArgs e)
         {
-            txtDenumire.Background = Brushes.White;
-            txtPret.Background = Brushes.White;
-            txtStoc.Background = Brushes.White;
+            string denumireCautata = txtCautare.Text.Trim();
 
-            tbErrDenumire.Visibility = Visibility.Collapsed;
-            tbErrPret.Visibility = Visibility.Collapsed;
-            tbErrStoc.Visibility = Visibility.Collapsed;
+            // Folosim LINQ pentru a cauta partial (Contains) in loc sa ceara numele complet fix
+            var rezultate = adminMedicamente.GetStoc()
+                .Where(m => m.Denumire.Contains(denumireCautata, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            AfiseazaInTabel(rezultate);
+
+            if (rezultate.Count == 0)
+            {
+                lblStatus.Foreground = Brushes.Orange;
+                lblStatus.Content = "Nu s-a găsit niciun medicament!";
+            }
+            else
+            {
+                lblStatus.Foreground = Brushes.Blue;
+                lblStatus.Content = $"S-au găsit {rezultate.Count} rezultate.";
+            }
+        }
+
+        private void btnAfiseazaToti_Click(object sender, RoutedEventArgs e)
+        {
+            txtCautare.Clear();
+            AfiseazaInTabel(adminMedicamente.GetStoc());
+            lblStatus.Content = "";
+        }
+
+        // ================= HELPER =================
+        private void AfiseazaInTabel(List<Medicament> lista)
+        {
+            dgMedicamente.ItemsSource = null;
+            dgMedicamente.ItemsSource = lista;
         }
     }
 }
