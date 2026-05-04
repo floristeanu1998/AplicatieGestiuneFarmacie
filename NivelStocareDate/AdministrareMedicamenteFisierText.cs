@@ -110,6 +110,33 @@ namespace NivelStocareDate
             } 
             return false;
         }
-        
+        public bool ModificaMedicament(Medicament medicamentActualizat)
+        {
+            // 1. Citim toate medicamentele curente din fisier
+            List<Medicament> medicamente = GetStoc();
+            bool actualizareCuSucces = false;
+
+            // 2. Deschidem fisierul in modul 'overwrite' (parametrul 'false') pentru a-l suprascrie complet
+            using (StreamWriter streamWriterFisierText = new StreamWriter(numeFisier, false))
+            {
+                foreach (Medicament med in medicamente)
+                {
+                    Medicament medicamentPentruScrisInFisier = med;
+
+                    // Daca gasim medicamentul pe care vrem sa il modificam (dupa ID), il inlocuim cu cel actualizat
+                    if (med.IdMedicament == medicamentActualizat.IdMedicament)
+                    {
+                        medicamentPentruScrisInFisier = medicamentActualizat;
+                    }
+
+                    // 3. Scriem linia in fisier
+                    streamWriterFisierText.WriteLine(medicamentPentruScrisInFisier.ConversieLaSirPentruFisier());
+                }
+                actualizareCuSucces = true;
+            }
+
+            return actualizareCuSucces;
+        }
+
     }
 }

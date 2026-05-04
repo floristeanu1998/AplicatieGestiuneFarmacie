@@ -45,5 +45,9 @@ namespace NivelStocareDate
             }
             return false;
         }
+        public bool ModificaMedicament(Medicament medicamentActualizat)
+        {
+            return false;
+        }
     }
 }

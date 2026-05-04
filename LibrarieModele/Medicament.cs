@@ -49,6 +49,16 @@ namespace LibrarieModele
         public FormaPrezentare Forma { get; set; } // Proprietate pentru forma de prezentare a medicamentului
         public ConditiiPastrare Conditii { get; set; } // Proprietate pentru conditiile de pastrare a medicamentului
 
+        // Lista categoriilor (statica pentru a o lega usor la ListBox)
+        public static readonly List<string> CategoriiDisponibile = new List<string> { "Analgezice", "Antibiotice", "Suplimente", "Cardiologice", "Dermatologice" };
+
+        public string Categorie { get; set; }
+        public DateTime DataExpirare { get; set; }
+        public DateTime DataActualizare { get; set; }
+
+        // O proprietate utila ca sa pentru ComboBox-ul de modificare
+        public string AfisareComboBox => $"{Denumire} (Stoc: {CantitateStoc})";
+
         public bool EsteDisponibil() => CantitateStoc > 0; // Proprietate computed pentru a verifica disponibilitatea medicamentului
 
         public Medicament()  // Constructor fara parametri peentru caz in care nu se ofera informatii la crearea obiectului si sa nu fie eroari daca incercam sa-l afisam
@@ -59,6 +69,9 @@ namespace LibrarieModele
             CantitateStoc = 0;
             Forma = FormaPrezentare.Comprimate; // Valoare implicita pentru forma de prezentare
             Conditii = ConditiiPastrare.TemperaturaCamerei; // Valoare implicita pentru conditiile de pastrare
+            Categorie = "Analgezice";
+            DataExpirare = DateTime.Today.AddYears(1); // Expiră peste un an implicit
+            DataActualizare = DateTime.Now;
         }
 
         public Medicament(int id,string denumire, double pret, int cantitateStoc,FormaPrezentare forma, ConditiiPastrare conditii)  // Constructor cu parametri pentru a initializa proprietatile
@@ -69,6 +82,9 @@ namespace LibrarieModele
             IdMedicament= id;
             Forma = forma;
             Conditii = conditii;
+            Categorie = "Analgezice";
+            DataExpirare = DateTime.Today.AddYears(1); // Expiră peste un an implicit
+            DataActualizare = DateTime.Now;
         }
 
         // Constructor pentru fisier, primeste string din fisier si trebuie sa-l faca obiect
@@ -83,7 +99,24 @@ namespace LibrarieModele
 
 
             this.Forma = (FormaPrezentare)Convert.ToInt32(dateFisier[FORMA]); // Convertim stringul din fisier in int si apoi in enum
-            this.Conditii = (ConditiiPastrare)Convert.ToInt32(dateFisier[CONDITII]); 
+            this.Conditii = (ConditiiPastrare)Convert.ToInt32(dateFisier[CONDITII]);
+            
+            // Presupunem ca Forma si Conditiile sunt pe pozitiile 4 si 5. 
+            // Categoria va fi pe 6, DataExpirare pe 7, DataActualizare pe 8.
+            if (dateFisier.Length > 6)
+                this.Categorie = dateFisier[6];
+            else
+                this.Categorie = "Analgezice";
+
+            if (dateFisier.Length > 7 && DateTime.TryParse(dateFisier[7], out DateTime dataExp))
+                this.DataExpirare = dataExp;
+            else
+                this.DataExpirare = DateTime.Today.AddYears(1);
+
+            if (dateFisier.Length > 8 && DateTime.TryParse(dateFisier[8], out DateTime dataAct))
+                this.DataActualizare = dataAct;
+            else
+                this.DataActualizare = DateTime.Now;
         }
 
 
@@ -99,7 +132,7 @@ namespace LibrarieModele
 
         public string ConversieLaSirPentruFisier()
         {
-            string obiectMedicamentPentruFisier = string.Format("{1}{0}{2}{0}{3}{0}{4}{0}{5}{0}{6}",
+            string obiectMedicamentPentruFisier = string.Format("{1}{0}{2}{0}{3}{0}{4}{0}{5}{0}{6}{0}{7}{0}{8}{0}{9}",
 
 
                 SEPARATOR_PRINCIPAL_FISIER, // {0}
@@ -108,7 +141,10 @@ namespace LibrarieModele
                 Pret.ToString(), // {3}
                 CantitateStoc.ToString(), // {4}
                 ((int)Forma).ToString(), // {5} - Convertim enum la int pentru a-l salva in fisier
-                ((int)Conditii).ToString() // {6} - Convertim enum cu flags la int pentru a-l salva in fisier
+                ((int)Conditii).ToString(), // {6} - Convertim enum cu flags la int pentru a-l salva in fisier
+                Categorie,
+                DataExpirare.ToString("dd/MM/yyyy"),
+                DataActualizare.ToString("dd/MM/yyyy HH:mm:ss")
 
                 );
             return obiectMedicamentPentruFisier;

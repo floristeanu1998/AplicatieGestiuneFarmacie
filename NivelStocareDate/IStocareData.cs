@@ -12,5 +12,7 @@ namespace NivelStocareDate
         bool StergeMedicamentDupaNume(string nume);
 
         bool VanzareMedicament(string nume, int cantitateVanduta);
+
+        bool ModificaMedicament(Medicament m);
     }
 }
