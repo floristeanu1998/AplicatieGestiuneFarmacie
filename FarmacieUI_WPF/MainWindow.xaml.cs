@@ -1,71 +1,196 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using LibrarieModele;
 using NivelStocareDate;
 
-namespace NivelUIWPF  
+namespace NivelUIWPF
 {
-    public partial class MainWindow : Window
+    // Am adaugat INotifyPropertyChanged pentru a folosi Data Binding pe entitatea Farmacie
+    public partial class MainWindow : Window, INotifyPropertyChanged
     {
+        // Administrare Medicamente (existent)
         private IStocareData adminMedicamente;
+
+        // Administrare Farmacii 
+        private IStocareFarmacii adminFarmacii;
+        private Farmacie farmacieCurenta;
+
+        // Proprietatea legata direct la XAML prin Binding
+        public Farmacie FarmacieCurenta
+        {
+            get => farmacieCurenta;
+            set
+            {
+                farmacieCurenta = value;
+                OnPropertyChanged(); // Anuntam interfata cand se schimba farmacia
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
 
         public MainWindow()
         {
             InitializeComponent();
 
-            
+            // Setam contextul de date pentru Binding
+            DataContext = this;
+
+            // Initializare Medicamente
             adminMedicamente = new AdministrareMedicamenteFisierText("Medicamente.txt");
-
-            AfiseazaInTabel(adminMedicamente.GetStoc());
-
-            // Preluam Categoriile pentru ListBox-ul de adaugare
+            //AfiseazaInTabel(adminMedicamente.GetStoc()); Dezactivat ca sa nu incarce memoria in caz de fisiere mari
             lstCategorieAdaugare.ItemsSource = Medicament.CategoriiDisponibile;
-            lstCategorieAdaugare.SelectedIndex = 0; // Selectam implicit prima categorie
-
-            // Punem data implicita in calendar
+            lstCategorieAdaugare.SelectedIndex = 0;
             dtpDataExpirare.SelectedDate = DateTime.Today.AddYears(1);
+
+            // Initializare Farmacii 
+            adminFarmacii = new AdministrareFarmaciiFisierText("Farmacii.txt");
+            FarmacieCurenta = new Farmacie(); // Initializam o farmacie goala pentru a nu avea erori in XAML
+            AfiseazaFarmacii();
         }
 
-        //  MENIU VERTICAL 
+
+        // MENIU VERTICAL NAVIGARE
+
         private void btnMeniuAdauga_Click(object sender, RoutedEventArgs e)
         {
+            AscundeToatePanourile();
             panouAdaugare.Visibility = Visibility.Visible;
-            panouModifica.Visibility = Visibility.Collapsed;
-            panouCautare.Visibility = Visibility.Collapsed;
-            lblStatus.Content = "";
+            dgMedicamente.Visibility = Visibility.Visible; // Arată tabelul de medicamente
         }
 
         private void btnMeniuModifica_Click(object sender, RoutedEventArgs e)
         {
-            panouAdaugare.Visibility = Visibility.Collapsed;
+            AscundeToatePanourile();
             panouModifica.Visibility = Visibility.Visible;
-            panouCautare.Visibility = Visibility.Collapsed;
-            lblStatus.Content = "";
+            dgMedicamente.Visibility = Visibility.Visible; // Arată tabelul de medicamente
 
-            // Resetam ComboBox-ul pentru a incarca datele la zi
             cmbMedicamenteModificare.ItemsSource = null;
             cmbMedicamenteModificare.ItemsSource = adminMedicamente.GetStoc();
-
-            // Curatam casutele vechi
-            txtModificaDenumire.Clear();
-            txtModificaPret.Clear();
-            txtModificaStoc.Clear();
+            txtModificaDenumire.Clear(); txtModificaPret.Clear(); txtModificaStoc.Clear();
             dtpModificaDataExpirare.SelectedDate = null;
         }
 
         private void btnMeniuCauta_Click(object sender, RoutedEventArgs e)
         {
+            AscundeToatePanourile();
+            panouCautare.Visibility = Visibility.Visible;
+            dgMedicamente.Visibility = Visibility.Visible; // Arată tabelul de medicamente
+        }
+
+        private void btnMeniuFarmacii_Click(object sender, RoutedEventArgs e)
+        {
+            AscundeToatePanourile();
+            panouFarmacii.Visibility = Visibility.Visible;
+
+            // Ascundem tabelul de medicamente ca să facem loc panoului de farmacii
+            dgMedicamente.Visibility = Visibility.Collapsed;
+
+            FarmacieCurenta = new Farmacie(); // Formular gol cand deschidem panoul
+        }
+
+        private void AscundeToatePanourile()
+        {
             panouAdaugare.Visibility = Visibility.Collapsed;
             panouModifica.Visibility = Visibility.Collapsed;
-            panouCautare.Visibility = Visibility.Visible;
+            panouCautare.Visibility = Visibility.Collapsed;
+            panouFarmacii.Visibility = Visibility.Collapsed;
             lblStatus.Content = "";
         }
 
-        //  ADAUGARE MEDICAMENT 
+
+        // Logica pentru gestionarea farmaciilor - a doua entitate cu binding
+
+        private void AfiseazaFarmacii()
+        {
+            dgFarmacii.ItemsSource = null;
+            dgFarmacii.ItemsSource = adminFarmacii.GetFarmacii();
+        }
+
+        private void btnAdaugaFarmacie_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(FarmacieCurenta.Nume))
+            {
+                lblStatus.Foreground = Brushes.Red;
+                lblStatus.Content = "Numele farmaciei este obligatoriu!";
+                return;
+            }
+
+            adminFarmacii.AdaugaFarmacie(FarmacieCurenta);
+            lblStatus.Foreground = Brushes.Green;
+            lblStatus.Content = "Farmacie adăugată cu succes!";
+
+            FarmacieCurenta = new Farmacie(); // Golim casutele dupa adaugare
+            AfiseazaFarmacii();
+        }
+
+        private void btnModificaFarmacie_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(FarmacieCurenta.Nume))
+            {
+                lblStatus.Foreground = Brushes.Red;
+                lblStatus.Content = "Selectează o farmacie pentru a o modifica!";
+                return;
+            }
+
+            bool succes = adminFarmacii.ModificaFarmacie(FarmacieCurenta);
+            if (succes)
+            {
+                lblStatus.Foreground = Brushes.Blue;
+                lblStatus.Content = "Farmacie modificată cu succes!";
+                AfiseazaFarmacii();
+            }
+            else
+            {
+                lblStatus.Foreground = Brushes.Red;
+                lblStatus.Content = "Farmacia nu a fost găsită (numele nu poate fi modificat)!";
+            }
+        }
+
+        private void btnStergeFarmacie_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(FarmacieCurenta.Nume)) return;
+
+            bool succes = adminFarmacii.StergeFarmacie(FarmacieCurenta.Nume);
+            if (succes)
+            {
+                lblStatus.Foreground = Brushes.Red;
+                lblStatus.Content = "Farmacia a fost ștearsă!";
+                FarmacieCurenta = new Farmacie();
+                AfiseazaFarmacii();
+            }
+        }
+
+        private void btnResetFarmacie_Click(object sender, RoutedEventArgs e)
+        {
+            FarmacieCurenta = new Farmacie();
+            dgFarmacii.SelectedItem = null;
+            lblStatus.Content = "";
+        }
+
+        private void dgFarmacii_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // Cand dam click pe un rand in tabel, incarcam datele direct in FarmacieCurenta.
+            // Data Binding-ul va actualiza automat cele 3 TextBox-uri vizuale!
+            if (dgFarmacii.SelectedItem is Farmacie farmacieSelectata)
+            {
+                // Facem o copie ca sa nu modificam direct randul din tabel pana nu dam click pe "Modifica"
+                FarmacieCurenta = new Farmacie(farmacieSelectata.Nume, farmacieSelectata.Adresa, farmacieSelectata.Oras);
+            }
+        }
+
+        
+        // LOGICA MEDICAMENTE 
+        
         private void btnSalveaza_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -91,8 +216,6 @@ namespace NivelUIWPF
                 int nextId = adminMedicamente.GetStoc().Any() ? adminMedicamente.GetStoc().Max(m => m.IdMedicament) + 1 : 1;
 
                 Medicament med = new Medicament(nextId, denumire, pret, stoc, forma, conditii);
-
-                //  Preluam noile date pentru Lab 9 
                 med.Categorie = lstCategorieAdaugare.SelectedItem?.ToString() ?? "Analgezice";
                 med.DataExpirare = dtpDataExpirare.SelectedDate ?? DateTime.Today.AddYears(1);
                 med.DataActualizare = DateTime.Now;
@@ -112,12 +235,10 @@ namespace NivelUIWPF
             }
         }
 
-        //  MODIFICARE MEDICAMENT
         private void cmbMedicamenteModificare_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (cmbMedicamenteModificare.SelectedItem is Medicament med)
             {
-                // Cand alege un medicament din lista, ii completam automat casutele cu datele curente
                 txtModificaDenumire.Text = med.Denumire;
                 txtModificaPret.Text = med.Pret.ToString();
                 txtModificaStoc.Text = med.CantitateStoc.ToString();
@@ -131,14 +252,12 @@ namespace NivelUIWPF
             {
                 if (cmbMedicamenteModificare.SelectedItem is Medicament medSelectat)
                 {
-                    // Preluam datele din casute
                     medSelectat.Denumire = txtModificaDenumire.Text ?? "Fara Nume";
                     medSelectat.Pret = Convert.ToDouble(txtModificaPret.Text);
                     medSelectat.CantitateStoc = Convert.ToInt32(txtModificaStoc.Text);
                     medSelectat.DataExpirare = dtpModificaDataExpirare.SelectedDate ?? DateTime.Today.AddYears(1);
-                    medSelectat.DataActualizare = DateTime.Now; // Marcam ora exacta a actualizarii
+                    medSelectat.DataActualizare = DateTime.Now;
 
-                    // Apelam metoda noastra noua din backend
                     bool succes = adminMedicamente.ModificaMedicament(medSelectat);
 
                     if (succes)
@@ -146,11 +265,8 @@ namespace NivelUIWPF
                         lblStatus.Foreground = Brushes.Blue;
                         lblStatus.Content = "Medicament modificat cu succes!";
                         AfiseazaInTabel(adminMedicamente.GetStoc());
-
-                        // Reimprospatam ComboBox-ul
                         cmbMedicamenteModificare.ItemsSource = null;
                         cmbMedicamenteModificare.ItemsSource = adminMedicamente.GetStoc();
-
                         txtModificaDenumire.Clear(); txtModificaPret.Clear(); txtModificaStoc.Clear();
                     }
                     else
@@ -172,14 +288,19 @@ namespace NivelUIWPF
             }
         }
 
-        //  CAUTARE 
         private void btnExecutaCautare_Click(object sender, RoutedEventArgs e)
         {
             string denumireCautata = txtCautare.Text.Trim();
 
-            var rezultate = adminMedicamente.GetStoc()
-                .Where(m => (m.Denumire ?? string.Empty).Contains(denumireCautata, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            if (string.IsNullOrEmpty(denumireCautata))
+            {
+                lblStatus.Foreground = Brushes.Orange;
+                lblStatus.Content = "Introduceți un cuvânt pentru a căuta în arhiva uriașă!";
+                return;
+            }
+
+            // Apelare modificata
+            var rezultate = adminMedicamente.FiltreazaMedicamente(denumireCautata);
 
             AfiseazaInTabel(rezultate);
 
@@ -191,18 +312,23 @@ namespace NivelUIWPF
             else
             {
                 lblStatus.Foreground = Brushes.Blue;
-                lblStatus.Content = $"S-au găsit {rezultate.Count} rezultate.";
+                lblStatus.Content = $"Căutare finalizată! S-au afișat {rezultate.Count} rezultate.";
             }
         }
 
         private void btnAfiseazaToti_Click(object sender, RoutedEventArgs e)
         {
             txtCautare.Clear();
-            AfiseazaInTabel(adminMedicamente.GetStoc());
-            lblStatus.Content = "";
+
+            // Preluăm doar ultimele 10 adăugate
+            var ultimele10 = adminMedicamente.GetUltimeleMedicamente(10);
+
+            AfiseazaInTabel(ultimele10);
+
+            lblStatus.Foreground = Brushes.Blue;
+            lblStatus.Content = "Se afișează cele mai recente 10 medicamente";
         }
 
-        //  HELPER
         private void AfiseazaInTabel(List<Medicament> lista)
         {
             dgMedicamente.ItemsSource = null;

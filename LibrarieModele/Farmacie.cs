@@ -1,22 +1,48 @@
 ﻿using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace LibrarieModele
 {
-    public class Farmacie
+    // Adaugam INotifyPropertyChanged
+    public class Farmacie : INotifyPropertyChanged
     {
-        // Const pentru fisier
         private const char SEPARATOR_PRINCIPAL_FISIER = ';';
-
         private const int NUME = 0;
         private const int ADRESA = 1;
         private const int ORAS = 2;
 
-        public string Nume { get; set; }
-        public string Adresa { get; set; }
-        public string Oras { get; set; }
+        private string nume;
+        private string adresa;
+        private string oras;
 
+        // Evenimentul pentru Binding
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
 
+        public string Nume
+        {
+            get => nume;
+            set { nume = value; OnPropertyChanged(); }
+        }
 
+        public string Adresa
+        {
+            get => adresa;
+            set { adresa = value; OnPropertyChanged(); }
+        }
+
+        public string Oras
+        {
+            get => oras;
+            set { oras = value; OnPropertyChanged(); }
+        }
+
+        // Constructori si metode
+        public Farmacie() { } // Adauga un constructor gol util pentru adaugare
 
         public Farmacie(string nume, string adresa, string oras)
         {
@@ -25,31 +51,29 @@ namespace LibrarieModele
             Oras = oras;
         }
 
-        // Constructor pentru fisier
         public Farmacie(string linieFisier)
         {
             string[] dateFisier = linieFisier.Split(SEPARATOR_PRINCIPAL_FISIER);
-            
+            if (dateFisier.Length >= 3)
+            {
                 this.Nume = dateFisier[NUME];
                 this.Adresa = dateFisier[ADRESA];
                 this.Oras = dateFisier[ORAS];
-            
+            }
         }
 
         public string InfoFarmacie()
         {
-            return $"Farmacia {Nume.ToUpper()}, situată în {Oras}, adresa: {Adresa}";
+            return $"Farmacia {Nume?.ToUpper()}, situată în {Oras}, adresa: {Adresa}";
         }
 
-        public string ConversieLaSirPentruFisier()  // Metoda pentru salvare in fisier
+        public string ConversieLaSirPentruFisier()
         {
-            string obiectFarmaciePentruFisier = string.Format("{1}{0}{2}{0}{3}",
-                SEPARATOR_PRINCIPAL_FISIER, // {0}
-                (Nume ?? "NECUNOSCUT"), // {1}
-                (Adresa ?? "NECUNOSCUT"),// {2}
-                (Oras ?? "NECUNOSCUT"));// {3}
-
-            return obiectFarmaciePentruFisier;
+            return string.Format("{1}{0}{2}{0}{3}",
+                SEPARATOR_PRINCIPAL_FISIER,
+                (Nume ?? "NECUNOSCUT"),
+                (Adresa ?? "NECUNOSCUT"),
+                (Oras ?? "NECUNOSCUT"));
         }
     }
 }

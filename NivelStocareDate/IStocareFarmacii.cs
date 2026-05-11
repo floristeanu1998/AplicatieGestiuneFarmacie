@@ -11,6 +11,8 @@ namespace NivelStocareDate
         void AdaugaFarmacie(Farmacie farmacie);
         List<Farmacie> GetFarmacii();
         Farmacie CautaFarmacieDupaNume(string nume);
+        bool ModificaFarmacie(Farmacie farmacieActualizata); 
+        bool StergeFarmacie(string numeFarmacie);
 
     }
 }

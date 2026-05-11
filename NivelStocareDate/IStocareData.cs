@@ -14,5 +14,10 @@ namespace NivelStocareDate
         bool VanzareMedicament(string nume, int cantitateVanduta);
 
         bool ModificaMedicament(Medicament m);
+
+        List<Medicament> FiltreazaMedicamente(string textCautat); // Pentru fisiere mari
+
+        
+        List<Medicament> GetUltimeleMedicamente(int nr);
     }
 }

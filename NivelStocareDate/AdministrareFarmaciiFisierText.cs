@@ -54,5 +54,49 @@ namespace NivelStocareDate
             List<Farmacie> farmacii = GetFarmacii();
             return farmacii.FirstOrDefault(f => f.Nume.Equals(nume, System.StringComparison.OrdinalIgnoreCase));
         }
+        public bool ModificaFarmacie(Farmacie farmacieActualizata)
+        {
+            List<Farmacie> farmacii = GetFarmacii();
+            bool gasit = false;
+
+            using (StreamWriter sw = new StreamWriter(numeFisier, false))
+            {
+                foreach (Farmacie f in farmacii)
+                {
+                    if (f.Nume.Equals(farmacieActualizata.Nume, System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        sw.WriteLine(farmacieActualizata.ConversieLaSirPentruFisier());
+                        gasit = true;
+                    }
+                    else
+                    {
+                        sw.WriteLine(f.ConversieLaSirPentruFisier());
+                    }
+                }
+            }
+            return gasit;
+        }
+
+        public bool StergeFarmacie(string nume)
+        {
+            List<Farmacie> farmacii = GetFarmacii();
+            int sterse = farmacii.RemoveAll(f => f.Nume.Equals(nume, System.StringComparison.OrdinalIgnoreCase));
+
+            if (sterse > 0)
+            {
+                using (StreamWriter sw = new StreamWriter(numeFisier, false))
+                {
+                    foreach (Farmacie f in farmacii)
+                    {
+                        sw.WriteLine(f.ConversieLaSirPentruFisier());
+                    }
+                }
+            }
+
+
+            return sterse > 0;
+        }
+
+        
     }
 }

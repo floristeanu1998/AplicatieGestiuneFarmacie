@@ -137,6 +137,50 @@ namespace NivelStocareDate
 
             return actualizareCuSucces;
         }
+        public List<Medicament> GetUltimeleMedicamente(int nr)
+        {
+            // Folosim ReadLines  și luăm doar ultimele 'nr' linii din fișier
+            // Această metodă este sigură pentru fișiere de milioane de rânduri
+            var ultimeleLinii = File.ReadLines(numeFisier).TakeLast(nr);
+
+            List<Medicament> rezultate = new List<Medicament>();
+            foreach (var linie in ultimeleLinii)
+            {
+                if (!string.IsNullOrWhiteSpace(linie))
+                {
+                    rezultate.Add(new Medicament(linie));
+                }
+            }
+            return rezultate;
+        }
+
+        public List<Medicament> FiltreazaMedicamente(string textCautat)
+        {
+            List<Medicament> rezultate = new List<Medicament>();
+            string textCautatLower = textCautat.ToLower(); // Il facem cu litere mici ca sa gaseasca si "Nurofen" si "nurofen"
+
+            // Deschidem fisierul
+            using (StreamReader streamReader = new StreamReader(numeFisier))
+            {
+                string linieFisier;
+
+                // Citim exact un singur rand la un moment dat (memoria  ramane goala)
+                while ((linieFisier = streamReader.ReadLine()) != null)
+                {
+                    if (string.IsNullOrWhiteSpace(linieFisier)) continue;
+
+                    // Cautam cuvantul direct in linia bruta de text!
+                    // Daca il contine, cream un obiect de tip Medicament.
+                    if (linieFisier.ToLower().Contains(textCautatLower))
+                    {
+                        rezultate.Add(new Medicament(linieFisier));
+                    }
+                }
+            }
+            return rezultate;
+        }
+
+
 
     }
 }

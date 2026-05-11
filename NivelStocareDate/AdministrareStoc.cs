@@ -49,5 +49,15 @@ namespace NivelStocareDate
         {
             return false;
         }
+
+        public List<Medicament> FiltreazaMedicamente(string textCautat)
+        {
+            return stoc.Where(m => (m.Denumire ?? string.Empty).ToLower().Contains(textCautat.ToLower())).ToList();
+        }
+
+        public List<Medicament> GetUltimeleMedicamente(int nr)
+        {
+            return stoc.TakeLast(nr).ToList();
+        }
     }
 }
