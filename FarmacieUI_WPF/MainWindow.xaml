@@ -183,13 +183,13 @@
 
             <DataGrid x:Name="dgMedicamente" Grid.Row="2" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" AlternatingRowBackground="#F9F9F9">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="ID" Binding="{Binding IdMedicament}" Width="40"/>
-                    <DataGridTextColumn Header="Denumire" Binding="{Binding Denumire}" Width="120"/>
-                    <DataGridTextColumn Header="Categorie" Binding="{Binding Categorie}" Width="100"/>
-                    <DataGridTextColumn Header="Preț" Binding="{Binding Pret}" Width="60"/>
-                    <DataGridTextColumn Header="Stoc" Binding="{Binding CantitateStoc}" Width="50"/>
-                    <DataGridTextColumn Header="Formă" Binding="{Binding Forma}" Width="90"/>
-                    <DataGridTextColumn Binding="{Binding Conditii}" Header="Condiții" Width="150"/>
+                    <DataGridTextColumn Header="ID" Binding="{Binding IdMedicament}" Width="Auto"/>
+                    <DataGridTextColumn Header="Denumire" Binding="{Binding Denumire}" Width="Auto"/>
+                    <DataGridTextColumn Header="Categorie" Binding="{Binding Categorie}" Width="Auto"/>
+                    <DataGridTextColumn Header="Preț" Binding="{Binding Pret}" Width="Auto"/>
+                    <DataGridTextColumn Header="Stoc" Binding="{Binding CantitateStoc}" Width="Auto"/>
+                    <DataGridTextColumn Header="Formă" Binding="{Binding Forma}" Width="Auto"/>
+                    <DataGridTextColumn Binding="{Binding Conditii}" Header="Condiții" Width="*"/>
                     <DataGridTextColumn Header="Expiră la" Binding="{Binding DataExpirare, StringFormat=dd.MM.yyyy}" Width="80"/>
                     <DataGridTextColumn Header="Actualizat" Binding="{Binding DataActualizare, StringFormat=HH:mm (dd.MM)}" Width="90"/>
                 </DataGrid.Columns>
