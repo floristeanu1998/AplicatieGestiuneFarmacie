@@ -11,71 +11,90 @@ using NivelStocareDate;
 
 namespace NivelUIWPF
 {
-    // Am adaugat INotifyPropertyChanged pentru a folosi Data Binding pe entitatea Farmacie
+    // =========================================================================
+    // HEADER: CLASA PRINCIPALA A FERESTREI (MVVM + Paginare)
+    // =========================================================================
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
-        // Administrare Medicamente (existent)
+        // Aici definim interfețele de stocare
         private IStocareData adminMedicamente;
-
-        // Administrare Farmacii 
         private IStocareFarmacii adminFarmacii;
-        private Farmacie farmacieCurenta;
 
-        // Proprietatea legata direct la XAML prin Binding
+        // Aici sunt variabilele pentru controlul Paginării (Optimizare RAM)
+        private int paginaCurenta = 1;
+        private int elementePePagina = 20;
+        private List<Medicament> listaCurentaMedicamente = new List<Medicament>();
+
+        // Aici reținem instanțele curente pentru formular
+        private Farmacie farmacieCurenta;
+        private Medicament medicamentCurent;
+
+        // Aici este proprietatea Binding pentru Farmacii
         public Farmacie FarmacieCurenta
         {
             get => farmacieCurenta;
-            set
-            {
-                farmacieCurenta = value;
-                OnPropertyChanged(); // Anuntam interfata cand se schimba farmacia
-            }
+            set { farmacieCurenta = value; OnPropertyChanged(); }
         }
 
+        // Aici este proprietatea Binding pentru Medicamente
+        public Medicament MedicamentCurent
+        {
+            get => medicamentCurent;
+            set { medicamentCurent = value; OnPropertyChanged(); }
+        }
+
+        // Aici este evenimentul de notificare a interfeței
         public event PropertyChangedEventHandler PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
+        // =========================================================================
+        // HEADER: CONSTRUCTOR
+        // =========================================================================
         public MainWindow()
         {
             InitializeComponent();
-
-            // Setam contextul de date pentru Binding
             DataContext = this;
 
-            // Initializare Medicamente
+            // Aici inițializăm modulul de Medicamente
             adminMedicamente = new AdministrareMedicamenteFisierText("Medicamente.txt");
-            //AfiseazaInTabel(adminMedicamente.GetStoc()); Dezactivat ca sa nu incarce memoria in caz de fisiere mari
+            MedicamentCurent = new Medicament();
             lstCategorieAdaugare.ItemsSource = Medicament.CategoriiDisponibile;
             lstCategorieAdaugare.SelectedIndex = 0;
-            dtpDataExpirare.SelectedDate = DateTime.Today.AddYears(1);
 
-            // Initializare Farmacii 
+            // Aici încărcăm tabelul de medicamente folosind Paginarea de la bun început
+            AfiseazaInTabel(adminMedicamente.GetStoc());
+
+            // Aici inițializăm modulul de Farmacii
             adminFarmacii = new AdministrareFarmaciiFisierText("Farmacii.txt");
-            FarmacieCurenta = new Farmacie(); // Initializam o farmacie goala pentru a nu avea erori in XAML
+            FarmacieCurenta = new Farmacie();
             AfiseazaFarmacii();
         }
 
-
-        // MENIU VERTICAL NAVIGARE
+        // =========================================================================
+        // HEADER: MENIU DE NAVIGARE
+        // =========================================================================
 
         private void btnMeniuAdauga_Click(object sender, RoutedEventArgs e)
         {
             AscundeToatePanourile();
             panouAdaugare.Visibility = Visibility.Visible;
-            dgMedicamente.Visibility = Visibility.Visible; // Arată tabelul de medicamente
+            dgMedicamente.Visibility = Visibility.Visible;
+            if (panouPaginare != null) panouPaginare.Visibility = Visibility.Visible;
         }
 
         private void btnMeniuModifica_Click(object sender, RoutedEventArgs e)
         {
             AscundeToatePanourile();
             panouModifica.Visibility = Visibility.Visible;
-            dgMedicamente.Visibility = Visibility.Visible; // Arată tabelul de medicamente
+            dgMedicamente.Visibility = Visibility.Visible;
+            if (panouPaginare != null) panouPaginare.Visibility = Visibility.Visible;
 
-            cmbMedicamenteModificare.ItemsSource = null;
-            cmbMedicamenteModificare.ItemsSource = adminMedicamente.GetStoc();
+            // AM ȘTERS vechea încărcare a stocului complet de aici. 
+            // ComboBox-ul este deja încărcat și sincronizat de funcția AfiseazaInTabel!
+
             txtModificaDenumire.Clear(); txtModificaPret.Clear(); txtModificaStoc.Clear();
             dtpModificaDataExpirare.SelectedDate = null;
         }
@@ -84,87 +103,88 @@ namespace NivelUIWPF
         {
             AscundeToatePanourile();
             panouCautare.Visibility = Visibility.Visible;
-            dgMedicamente.Visibility = Visibility.Visible; // Arată tabelul de medicamente
+            dgMedicamente.Visibility = Visibility.Visible;
+            if (panouPaginare != null) panouPaginare.Visibility = Visibility.Visible;
         }
 
         private void btnMeniuFarmacii_Click(object sender, RoutedEventArgs e)
         {
             AscundeToatePanourile();
             panouFarmacii.Visibility = Visibility.Visible;
-
-            // Ascundem tabelul de medicamente ca să facem loc panoului de farmacii
             dgMedicamente.Visibility = Visibility.Collapsed;
+            if (panouPaginare != null) panouPaginare.Visibility = Visibility.Collapsed;
 
-            FarmacieCurenta = new Farmacie(); // Formular gol cand deschidem panoul
+            if (cmbOrasFiltru != null) cmbOrasFiltru.SelectedIndex = 0;
+            FarmacieCurenta = new Farmacie();
+            AfiseazaFarmacii();
         }
 
+        // Aici se ascund toate secțiunile active
         private void AscundeToatePanourile()
         {
             panouAdaugare.Visibility = Visibility.Collapsed;
             panouModifica.Visibility = Visibility.Collapsed;
             panouCautare.Visibility = Visibility.Collapsed;
             panouFarmacii.Visibility = Visibility.Collapsed;
-            lblStatus.Content = "";
+            if (lblStatus != null) lblStatus.Content = "";
         }
 
-
-        // Logica pentru gestionarea farmaciilor - a doua entitate cu binding
+        // =========================================================================
+        // HEADER: GESTIUNE FARMACII
+        // =========================================================================
 
         private void AfiseazaFarmacii()
         {
-            dgFarmacii.ItemsSource = null;
-            dgFarmacii.ItemsSource = adminFarmacii.GetFarmacii();
+            if (dgFarmacii == null || adminFarmacii == null) return;
+            var toateFarmaciile = adminFarmacii.GetFarmacii();
+            string orasSelectat = cmbOrasFiltru?.SelectedItem is ComboBoxItem item ? item.Content.ToString() : "";
+
+            if (orasSelectat == "Toate" || string.IsNullOrEmpty(orasSelectat))
+                dgFarmacii.ItemsSource = toateFarmaciile;
+            else
+                dgFarmacii.ItemsSource = toateFarmaciile.Where(f => f.Oras.Equals(orasSelectat, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+
+        private void cmbOrasFiltru_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            AfiseazaFarmacii();
+            FarmacieCurenta = new Farmacie();
+            if (lblStatus != null) lblStatus.Content = "";
+        }
+
+        private void dgFarmacii_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (dgFarmacii.SelectedItem is Farmacie farmacieSelectata)
+            {
+                FarmacieCurenta = new Farmacie(farmacieSelectata.Nume, farmacieSelectata.Adresa, farmacieSelectata.Oras, farmacieSelectata.Telefon, farmacieSelectata.Email);
+                if (lblStatus != null) lblStatus.Content = "";
+            }
         }
 
         private void btnAdaugaFarmacie_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(FarmacieCurenta.Nume))
-            {
-                lblStatus.Foreground = Brushes.Red;
-                lblStatus.Content = "Numele farmaciei este obligatoriu!";
-                return;
-            }
-
             adminFarmacii.AdaugaFarmacie(FarmacieCurenta);
-            lblStatus.Foreground = Brushes.Green;
-            lblStatus.Content = "Farmacie adăugată cu succes!";
-
-            FarmacieCurenta = new Farmacie(); // Golim casutele dupa adaugare
+            if (lblStatus != null) { lblStatus.Foreground = Brushes.Green; lblStatus.Content = "Farmacie adăugată cu succes!"; }
+            FarmacieCurenta = new Farmacie();
             AfiseazaFarmacii();
         }
 
         private void btnModificaFarmacie_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(FarmacieCurenta.Nume))
+            if (adminFarmacii.ModificaFarmacie(FarmacieCurenta))
             {
-                lblStatus.Foreground = Brushes.Red;
-                lblStatus.Content = "Selectează o farmacie pentru a o modifica!";
-                return;
-            }
-
-            bool succes = adminFarmacii.ModificaFarmacie(FarmacieCurenta);
-            if (succes)
-            {
-                lblStatus.Foreground = Brushes.Blue;
-                lblStatus.Content = "Farmacie modificată cu succes!";
+                if (lblStatus != null) { lblStatus.Foreground = Brushes.Blue; lblStatus.Content = "Farmacie modificată cu succes!"; }
                 AfiseazaFarmacii();
             }
-            else
-            {
-                lblStatus.Foreground = Brushes.Red;
-                lblStatus.Content = "Farmacia nu a fost găsită (numele nu poate fi modificat)!";
-            }
+            else if (lblStatus != null) { lblStatus.Foreground = Brushes.Red; lblStatus.Content = "Eroare! Numele este cheie primară și nu poate fi schimbat."; }
         }
 
         private void btnStergeFarmacie_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(FarmacieCurenta.Nume)) return;
-
-            bool succes = adminFarmacii.StergeFarmacie(FarmacieCurenta.Nume);
-            if (succes)
+            if (adminFarmacii.StergeFarmacie(FarmacieCurenta.Nume))
             {
-                lblStatus.Foreground = Brushes.Red;
-                lblStatus.Content = "Farmacia a fost ștearsă!";
+                if (lblStatus != null) { lblStatus.Foreground = Brushes.Red; lblStatus.Content = "Farmacia a fost ștearsă din sistem!"; }
                 FarmacieCurenta = new Farmacie();
                 AfiseazaFarmacii();
             }
@@ -174,65 +194,45 @@ namespace NivelUIWPF
         {
             FarmacieCurenta = new Farmacie();
             dgFarmacii.SelectedItem = null;
-            lblStatus.Content = "";
+            if (lblStatus != null) lblStatus.Content = "";
         }
 
-        private void dgFarmacii_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            // Cand dam click pe un rand in tabel, incarcam datele direct in FarmacieCurenta.
-            // Data Binding-ul va actualiza automat cele 3 TextBox-uri vizuale!
-            if (dgFarmacii.SelectedItem is Farmacie farmacieSelectata)
-            {
-                // Facem o copie ca sa nu modificam direct randul din tabel pana nu dam click pe "Modifica"
-                FarmacieCurenta = new Farmacie(farmacieSelectata.Nume, farmacieSelectata.Adresa, farmacieSelectata.Oras);
-            }
-        }
+        // =========================================================================
+        // HEADER: GESTIUNE MEDICAMENTE
+        // =========================================================================
 
-        
-        // LOGICA MEDICAMENTE 
-        
+        // Aici preluăm datele și salvăm, funcția fiind securizată prin "IsEnabled" la Buton
         private void btnSalveaza_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                string denumire = txtDenumire.Text ?? "Fara Nume";
-                double pret = Convert.ToDouble(txtPret.Text);
-                int stoc = Convert.ToInt32(txtStoc.Text);
+            FormaPrezentare forma = FormaPrezentare.Comprimate;
+            if (rbSirop.IsChecked == true) forma = FormaPrezentare.Sirop;
+            else if (rbUnguent.IsChecked == true) forma = FormaPrezentare.Unguent;
+            else if (rbSolutie.IsChecked == true) forma = FormaPrezentare.SolutieInjectabila;
+            MedicamentCurent.Forma = forma;
 
-                FormaPrezentare forma = FormaPrezentare.Comprimate;
-                if (rbSirop.IsChecked == true) forma = FormaPrezentare.Sirop;
-                else if (rbUnguent.IsChecked == true) forma = FormaPrezentare.Unguent;
-                else if (rbSolutie.IsChecked == true) forma = FormaPrezentare.SolutieInjectabila;
+            ConditiiPastrare conditii = 0;
+            if (chkTempCamerei.IsChecked == true) conditii |= ConditiiPastrare.TemperaturaCamerei;
+            if (chkRefrigerare.IsChecked == true) conditii |= ConditiiPastrare.Refrigerare;
+            if (chkCongelare.IsChecked == true) conditii |= ConditiiPastrare.Congelare;
+            if (chkLumina.IsChecked == true) conditii |= ConditiiPastrare.FeritDeLumina;
+            if (chkUmiditate.IsChecked == true) conditii |= ConditiiPastrare.FeritDeUmiditate;
+            if (conditii == 0) conditii = ConditiiPastrare.TemperaturaCamerei;
+            MedicamentCurent.Conditii = conditii;
 
-                ConditiiPastrare conditii = 0;
-                if (chkTempCamerei.IsChecked == true) conditii |= ConditiiPastrare.TemperaturaCamerei;
-                if (chkRefrigerare.IsChecked == true) conditii |= ConditiiPastrare.Refrigerare;
-                if (chkCongelare.IsChecked == true) conditii |= ConditiiPastrare.Congelare;
-                if (chkLumina.IsChecked == true) conditii |= ConditiiPastrare.FeritDeLumina;
-                if (chkUmiditate.IsChecked == true) conditii |= ConditiiPastrare.FeritDeUmiditate;
+            MedicamentCurent.Categorie = lstCategorieAdaugare.SelectedItem?.ToString() ?? "Analgezice";
+            MedicamentCurent.IdMedicament = adminMedicamente.GetStoc().Any() ? adminMedicamente.GetStoc().Max(m => m.IdMedicament) + 1 : 1;
+            MedicamentCurent.DataActualizare = DateTime.Now;
 
-                if (conditii == 0) conditii = ConditiiPastrare.TemperaturaCamerei;
+            adminMedicamente.AdaugaMedicament(MedicamentCurent);
 
-                int nextId = adminMedicamente.GetStoc().Any() ? adminMedicamente.GetStoc().Max(m => m.IdMedicament) + 1 : 1;
+            if (lblStatus != null) { lblStatus.Foreground = Brushes.Green; lblStatus.Content = "Medicament salvat cu succes!"; }
 
-                Medicament med = new Medicament(nextId, denumire, pret, stoc, forma, conditii);
-                med.Categorie = lstCategorieAdaugare.SelectedItem?.ToString() ?? "Analgezice";
-                med.DataExpirare = dtpDataExpirare.SelectedDate ?? DateTime.Today.AddYears(1);
-                med.DataActualizare = DateTime.Now;
+            rbComprimate.IsChecked = true;
+            chkTempCamerei.IsChecked = false; chkRefrigerare.IsChecked = false;
+            chkCongelare.IsChecked = false; chkLumina.IsChecked = false; chkUmiditate.IsChecked = false;
 
-                adminMedicamente.AdaugaMedicament(med);
-
-                lblStatus.Foreground = Brushes.Green;
-                lblStatus.Content = "Medicament salvat cu succes!";
-
-                txtDenumire.Clear(); txtPret.Clear(); txtStoc.Clear();
-                AfiseazaInTabel(adminMedicamente.GetStoc());
-            }
-            catch (Exception)
-            {
-                lblStatus.Foreground = Brushes.Red;
-                lblStatus.Content = "Eroare la date! Asigurați-vă că prețul și stocul sunt numere valide.";
-            }
+            MedicamentCurent = new Medicament();
+            AfiseazaInTabel(adminMedicamente.GetStoc());
         }
 
         private void cmbMedicamenteModificare_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -258,81 +258,95 @@ namespace NivelUIWPF
                     medSelectat.DataExpirare = dtpModificaDataExpirare.SelectedDate ?? DateTime.Today.AddYears(1);
                     medSelectat.DataActualizare = DateTime.Now;
 
-                    bool succes = adminMedicamente.ModificaMedicament(medSelectat);
-
-                    if (succes)
+                    if (adminMedicamente.ModificaMedicament(medSelectat))
                     {
-                        lblStatus.Foreground = Brushes.Blue;
-                        lblStatus.Content = "Medicament modificat cu succes!";
-                        AfiseazaInTabel(adminMedicamente.GetStoc());
-                        cmbMedicamenteModificare.ItemsSource = null;
-                        cmbMedicamenteModificare.ItemsSource = adminMedicamente.GetStoc();
+                        if (lblStatus != null) { lblStatus.Foreground = Brushes.Blue; lblStatus.Content = "Medicament modificat cu succes!"; }
+
+                        // Reîncărcăm tabelul, dar RĂMÂNEM PE ACEEAȘI PAGINĂ (false)
+                        AfiseazaInTabel(adminMedicamente.GetStoc(), false);
+
+                        // AM ȘTERS manual reîncărcarea ComboBox-ului, se va face automat din funcția de mai sus
                         txtModificaDenumire.Clear(); txtModificaPret.Clear(); txtModificaStoc.Clear();
                     }
-                    else
-                    {
-                        lblStatus.Foreground = Brushes.Red;
-                        lblStatus.Content = "Eroare la scrierea in fisier!";
-                    }
-                }
-                else
-                {
-                    lblStatus.Foreground = Brushes.Orange;
-                    lblStatus.Content = "Selectează un medicament mai întâi!";
                 }
             }
             catch (Exception)
             {
-                lblStatus.Foreground = Brushes.Red;
-                lblStatus.Content = "Eroare! Verificați dacă prețul și stocul sunt scrise corect.";
+                if (lblStatus != null) { lblStatus.Foreground = Brushes.Red; lblStatus.Content = "Eroare! Verificați valorile numerice."; }
             }
         }
 
         private void btnExecutaCautare_Click(object sender, RoutedEventArgs e)
         {
             string denumireCautata = txtCautare.Text.Trim();
-
             if (string.IsNullOrEmpty(denumireCautata))
             {
-                lblStatus.Foreground = Brushes.Orange;
-                lblStatus.Content = "Introduceți un cuvânt pentru a căuta în arhiva uriașă!";
+                if (lblStatus != null) { lblStatus.Foreground = Brushes.Orange; lblStatus.Content = "Introduceți un cuvânt!"; }
                 return;
             }
-
-            // Apelare modificata
-            var rezultate = adminMedicamente.FiltreazaMedicamente(denumireCautata);
-
-            AfiseazaInTabel(rezultate);
-
-            if (rezultate.Count == 0)
-            {
-                lblStatus.Foreground = Brushes.Orange;
-                lblStatus.Content = "Nu s-a găsit niciun medicament!";
-            }
-            else
-            {
-                lblStatus.Foreground = Brushes.Blue;
-                lblStatus.Content = $"Căutare finalizată! S-au afișat {rezultate.Count} rezultate.";
-            }
+            AfiseazaInTabel(adminMedicamente.FiltreazaMedicamente(denumireCautata));
         }
 
+        // Aici reafișăm tot stocul, delegând performanța sistemului de paginare
         private void btnAfiseazaToti_Click(object sender, RoutedEventArgs e)
         {
             txtCautare.Clear();
-
-            // Preluăm doar ultimele 10 adăugate
-            var ultimele10 = adminMedicamente.GetUltimeleMedicamente(10);
-
-            AfiseazaInTabel(ultimele10);
-
-            lblStatus.Foreground = Brushes.Blue;
-            lblStatus.Content = "Se afișează cele mai recente 10 medicamente";
+            AfiseazaInTabel(adminMedicamente.GetStoc());
+            if (lblStatus != null) { lblStatus.Foreground = Brushes.Blue; lblStatus.Content = "Se afișează arhiva completă."; }
         }
 
-        private void AfiseazaInTabel(List<Medicament> lista)
+        // =========================================================================
+        // HEADER: SISTEM DE PAGINARE (LINQ Skip / Take)
+        // =========================================================================
+
+        // Aici este logica centrală care împarte lista mare în subliste de 20 elemente
+        // Aici este logica centrală care împarte lista mare în subliste de 20 elemente
+        private void AfiseazaInTabel(List<Medicament> lista, bool reseteazaPagina = true)
         {
+            if (reseteazaPagina) paginaCurenta = 1;
+            listaCurentaMedicamente = lista;
+
+            int totalPagini = (int)Math.Ceiling((double)listaCurentaMedicamente.Count / elementePePagina);
+            if (totalPagini == 0) totalPagini = 1;
+
+            // Aici decupăm folosind funcțiile LINQ: Skip (sare paginile trecute) și Take (ia 20 bucăți)
+            var elementePagina = listaCurentaMedicamente
+                                 .Skip((paginaCurenta - 1) * elementePePagina)
+                                 .Take(elementePePagina)
+                                 .ToList();
+
             dgMedicamente.ItemsSource = null;
-            dgMedicamente.ItemsSource = lista;
+            dgMedicamente.ItemsSource = elementePagina;
+
+            // OPTIMIZARE : Sincronizăm ComboBox-ul cu elementele din pagina curentă a tabelului
+            if (cmbMedicamenteModificare != null)
+            {
+                cmbMedicamenteModificare.ItemsSource = null;
+                cmbMedicamenteModificare.ItemsSource = elementePagina;
+            }
+
+            if (lblPaginare != null)
+                lblPaginare.Content = $"Pagina {paginaCurenta} din {totalPagini} (Total arhivă: {listaCurentaMedicamente.Count})";
+
+            if (btnPaginaAnterioara != null)
+                btnPaginaAnterioara.IsEnabled = paginaCurenta > 1;
+
+            if (btnPaginaUrmatoare != null)
+                btnPaginaUrmatoare.IsEnabled = paginaCurenta < totalPagini;
+        }
+
+        // Aici scădem indexul paginii și reîncărcăm tabelul
+        private void btnPaginaAnterioara_Click(object sender, RoutedEventArgs e)
+        {
+            paginaCurenta--;
+            AfiseazaInTabel(listaCurentaMedicamente, false);
+        }
+
+        // Aici creștem indexul paginii și reîncărcăm tabelul
+        private void btnPaginaUrmatoare_Click(object sender, RoutedEventArgs e)
+        {
+            paginaCurenta++;
+            AfiseazaInTabel(listaCurentaMedicamente, false);
         }
     }
 }

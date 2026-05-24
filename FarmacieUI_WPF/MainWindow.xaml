@@ -6,15 +6,238 @@
         Background="#F4F6F6">
 
     <Window.Resources>
+
+        <ControlTemplate x:Key="PulsingErrorTemplate">
+            <StackPanel>
+                <Border BorderBrush="#E74C3C" BorderThickness="2" CornerRadius="4">
+                    <Border.Triggers>
+                        <EventTrigger RoutedEvent="Loaded">
+                            <BeginStoryboard>
+                                <Storyboard AutoReverse="True" RepeatBehavior="Forever">
+                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="1.0" To="0.3" Duration="0:0:0.6" />
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </Border.Triggers>
+                    <AdornedElementPlaceholder x:Name="adornedElement"/>
+                </Border>
+                <TextBlock Text="{Binding [0].ErrorContent}" Foreground="#E74C3C" FontSize="11" Margin="2,4,0,0" FontWeight="Bold"/>
+            </StackPanel>
+        </ControlTemplate>
+
+        <SolidColorBrush x:Key="CuloarePrimara" Color="#2C3E50"/>
+        <SolidColorBrush x:Key="CuloareAccent" Color="#3498DB"/>
+        <SolidColorBrush x:Key="CuloareHover" Color="#ECF0F1"/>
+        <SolidColorBrush x:Key="CuloareChenar" Color="#BDC3C7"/>
+        <SolidColorBrush x:Key="CuloareText" Color="#34495E"/>
+
         <Style TargetType="Label">
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="#34495E"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource CuloareText}"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
         </Style>
-        <Style TargetType="TextBox">
-            <Setter Property="Height" Value="30"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Padding" Value="5,0"/>
+
+        <Style TargetType="Control" x:Key="StilInputBaza">
+            <Setter Property="Height" Value="32"/>
             <Setter Property="FontSize" Value="14"/>
+            <Setter Property="BorderBrush" Value="{StaticResource CuloareChenar}"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style TargetType="TextBox" BasedOn="{StaticResource StilInputBaza}">
+            <Setter Property="Padding" Value="8,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="0"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="true">
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource CuloareAccent}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#95A5A6"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="DatePicker" BasedOn="{StaticResource StilInputBaza}"/>
+        <Style TargetType="ComboBox" BasedOn="{StaticResource StilInputBaza}"/>
+
+        <Style TargetType="Button">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderThickness="0" CornerRadius="5">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,5"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter TargetName="border" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="true">
+                                <Setter TargetName="border" Property="Opacity" Value="0.65"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="false">
+                                <Setter TargetName="border" Property="Background" Value="#BDC3C7"/>
+                                <Setter Property="Foreground" Value="#7F8C8D"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{StaticResource CuloareText}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Margin" Value="0,0,10,5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <StackPanel Orientation="Horizontal">
+                            <Border x:Name="checkBoxBorder" Width="18" Height="18" 
+                                    BorderBrush="{StaticResource CuloareChenar}" BorderThickness="1.5" 
+                                    Background="White" CornerRadius="3" VerticalAlignment="Center">
+                                <Path x:Name="checkMark" Data="M 3,9 L 7,13 L 14,4" 
+                                      Stroke="White" StrokeThickness="2" Visibility="Collapsed" 
+                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ContentPresenter Margin="8,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="true">
+                                <Setter TargetName="checkBoxBorder" Property="Background" Value="{StaticResource CuloareAccent}"/>
+                                <Setter TargetName="checkBoxBorder" Property="BorderBrush" Value="{StaticResource CuloareAccent}"/>
+                                <Setter TargetName="checkMark" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter TargetName="checkBoxBorder" Property="BorderBrush" Value="{StaticResource CuloareAccent}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{StaticResource CuloareText}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <StackPanel Orientation="Horizontal">
+                            <Border x:Name="radioBorder" Width="18" Height="18" 
+                                    BorderBrush="{StaticResource CuloareChenar}" BorderThickness="1.5" 
+                                    Background="White" CornerRadius="9" VerticalAlignment="Center">
+                                <Border x:Name="radioMark" Width="8" Height="8" 
+                                        Background="{StaticResource CuloareAccent}" CornerRadius="4" 
+                                        Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ContentPresenter Margin="8,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="true">
+                                <Setter TargetName="radioBorder" Property="BorderBrush" Value="{StaticResource CuloareAccent}"/>
+                                <Setter TargetName="radioMark" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter TargetName="radioBorder" Property="BorderBrush" Value="{StaticResource CuloareAccent}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="ListBox">
+            <Setter Property="BorderBrush" Value="{StaticResource CuloareChenar}"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Padding" Value="2"/>
+        </Style>
+
+        <Style TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="Margin" Value="0,2"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="ItemBorder" Background="Transparent" CornerRadius="4">
+                            <ContentPresenter Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource CuloareHover}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="true">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource CuloareAccent}"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="DataGrid">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#E0E0E0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="RowBackground" Value="White"/>
+            <Setter Property="AlternatingRowBackground" Value="#F8F9F9"/>
+            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="#EAECEE"/>
+            <Setter Property="RowHeight" Value="32"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="SelectionUnit" Value="FullRow"/>
+        </Style>
+
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#ECF0F1"/>
+            <Setter Property="Foreground" Value="{StaticResource CuloareText}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="BorderBrush" Value="{StaticResource CuloareChenar}"/>
+        </Style>
+
+        <Style TargetType="ScrollBar">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Width" Value="8"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Grid>
+                            <Border Background="Transparent"/>
+                            <Track x:Name="PART_Track" IsDirectionReversed="true">
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Border Background="#BDC3C7" CornerRadius="4" Margin="2,0"/>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </Window.Resources>
 
@@ -31,7 +254,6 @@
                 <Button x:Name="btnMeniuAdauga" Content="➕ Adaugă Medicament" Height="40" Background="#34495E" Foreground="White" BorderThickness="0" Margin="0,0,0,10" Click="btnMeniuAdauga_Click"/>
                 <Button x:Name="btnMeniuModifica" Content="✏️ Modifică Medicament" Height="40" Background="#34495E" Foreground="White" BorderThickness="0" Margin="0,0,0,10" Click="btnMeniuModifica_Click"/>
                 <Button x:Name="btnMeniuCauta" Content="🔍 Caută Medicament" Height="40" Background="#34495E" Foreground="White" BorderThickness="0" Margin="0,0,0,30" Click="btnMeniuCauta_Click"/>
-
                 <Button x:Name="btnMeniuFarmacii" Content="🏥 Rețea Farmacii" Height="40" Background="#8E44AD" Foreground="White" BorderThickness="0" Click="btnMeniuFarmacii_Click"/>
             </StackPanel>
         </Border>
@@ -41,9 +263,11 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <StackPanel x:Name="panouAdaugare" Grid.Row="0" Visibility="Visible">
+                <Label Content="Adăugare Medicament Nou (Validare Activă)" FontSize="16" Foreground="#27AE60" Margin="0,0,0,10"/>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -51,15 +275,22 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                        <Label Content="Denumire:"/>
-                        <TextBox x:Name="txtDenumire"/>
-                        <Label Content="Preț (RON):" Margin="0,10,0,0"/>
-                        <TextBox x:Name="txtPret"/>
-                        <Label Content="Stoc:" Margin="0,10,0,0"/>
-                        <TextBox x:Name="txtStoc"/>
-                        <Label Content="Data Expirării:" Margin="0,10,0,0"/>
-                        <DatePicker x:Name="dtpDataExpirare" Height="30" FontSize="14"/>
+                    <StackPanel Grid.Column="0" Margin="0,0,15,0">
+                        <Label Content="Denumire (Obligatoriu):"/>
+                        <TextBox x:Name="txtDenumire" Validation.ErrorTemplate="{StaticResource PulsingErrorTemplate}"
+                                 Text="{Binding MedicamentCurent.Denumire, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+
+                        <Label Content="Preț (RON):" Margin="0,15,0,0"/>
+                        <TextBox x:Name="txtPret" Validation.ErrorTemplate="{StaticResource PulsingErrorTemplate}"
+                                 Text="{Binding MedicamentCurent.Pret, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+
+                        <Label Content="Stoc (Buc):" Margin="0,15,0,0"/>
+                        <TextBox x:Name="txtStoc" Validation.ErrorTemplate="{StaticResource PulsingErrorTemplate}"
+                                 Text="{Binding MedicamentCurent.CantitateStoc, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+
+                        <Label Content="Data Expirării:" Margin="0,15,0,0"/>
+                        <DatePicker x:Name="dtpDataExpirare" Height="30" FontSize="14" Validation.ErrorTemplate="{StaticResource PulsingErrorTemplate}"
+                                    SelectedDate="{Binding MedicamentCurent.DataExpirare, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Margin="10,0,10,0">
@@ -89,7 +320,8 @@
                     </StackPanel>
                 </Grid>
 
-                <Button x:Name="btnSalveaza" Content="Salvează Medicament" Width="180" Height="35" Background="#27AE60" Foreground="White" FontWeight="Bold" Margin="0,20,0,0" HorizontalAlignment="Left" Click="btnSalveaza_Click"/>
+                <Button x:Name="btnSalveaza" Content="Salvează Medicament" Width="180" Height="35" Background="#27AE60" Foreground="White" FontWeight="Bold" Margin="0,20,0,0" HorizontalAlignment="Left" 
+                        Click="btnSalveaza_Click" IsEnabled="{Binding MedicamentCurent.EsteValid}"/>
             </StackPanel>
 
             <Border x:Name="panouModifica" Grid.Row="0" Visibility="Collapsed" Background="#FDFEFE" Padding="15" BorderBrush="#D5D8DC" BorderThickness="1" CornerRadius="5">
@@ -133,50 +365,89 @@
                 </StackPanel>
             </Border>
 
-            <Border x:Name="panouFarmacii" Grid.Row="0" Grid.RowSpan="3" Visibility="Collapsed" Background="#F4F6F6" Padding="0">
-                <StackPanel>
-                    <Label Content="🏥 Gestiune Rețea Farmacii" FontSize="18" Foreground="#8E44AD" Margin="0,0,0,15"/>
+            <Border x:Name="panouFarmacii" Grid.Row="0" Grid.RowSpan="4" Visibility="Collapsed" Background="#F4F6F6" Padding="0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-                    <Border Background="White" Padding="15" BorderBrush="#D5D8DC" BorderThickness="1" CornerRadius="5" Margin="0,0,0,20">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                                <Label Content="Nume Farmacie (Unic):"/>
-                                <TextBox Text="{Binding FarmacieCurenta.Nume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="1" Margin="10,0,10,0">
-                                <Label Content="Oraș:"/>
-                                <TextBox Text="{Binding FarmacieCurenta.Oras, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="2" Margin="10,0,0,0">
-                                <Label Content="Adresă Exactă:"/>
-                                <TextBox Text="{Binding FarmacieCurenta.Adresa, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                        <Button x:Name="btnAdaugaFarmacie" Content="Adaugă" Width="100" Height="30" Background="#27AE60" Foreground="White" Margin="0,0,10,0" Click="btnAdaugaFarmacie_Click"/>
-                        <Button x:Name="btnModificaFarmacie" Content="Modifică" Width="100" Height="30" Background="#E67E22" Foreground="White" Margin="0,0,10,0" Click="btnModificaFarmacie_Click"/>
-                        <Button x:Name="btnStergeFarmacie" Content="Șterge" Width="100" Height="30" Background="#C0392B" Foreground="White" Margin="0,0,10,0" Click="btnStergeFarmacie_Click"/>
-                        <Button x:Name="btnResetFarmacie" Content="Resetare" Width="80" Height="30" Background="#95A5A6" Foreground="White" Click="btnResetFarmacie_Click"/>
+                    <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                        <Label Content="🏥 Gestiune Rețea Farmacii" FontSize="18" Foreground="#8E44AD" Margin="0,0,0,5"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="Filtrează după Oraș:" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="cmbOrasFiltru" Width="150" Margin="10,0,0,0" SelectionChanged="cmbOrasFiltru_SelectionChanged">
+                                <ComboBoxItem Content="Toate" IsSelected="True"/>
+                                <ComboBoxItem Content="Suceava"/>
+                                <ComboBoxItem Content="Botoșani"/>
+                                <ComboBoxItem Content="Piatra Neamț"/>
+                            </ComboBox>
+                        </StackPanel>
                     </StackPanel>
 
-                    <DataGrid x:Name="dgFarmacii" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" Height="250" SelectionChanged="dgFarmacii_SelectionChanged">
+                    <DataGrid x:Name="dgFarmacii" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" 
+                              SelectionChanged="dgFarmacii_SelectionChanged" Margin="0,0,0,15" ColumnWidth="*">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Nume Farmacie" Binding="{Binding Nume}" Width="150"/>
-                            <DataGridTextColumn Header="Oraș" Binding="{Binding Oras}" Width="120"/>
-                            <DataGridTextColumn Header="Adresă Exactă" Binding="{Binding Adresa}" Width="*"/>
+                            <DataGridTextColumn Header="Nume Farmacie" Binding="{Binding Nume}"/>
+                            <DataGridTextColumn Header="Oraș" Binding="{Binding Oras}"/>
                         </DataGrid.Columns>
                     </DataGrid>
-                </StackPanel>
+
+                    <Border Grid.Row="2" Background="White" Padding="15" BorderBrush="#D5D8DC" BorderThickness="1" CornerRadius="5">
+                        <StackPanel>
+                            <Label Content="Detalii Farmacie (Adăugare / Editare)" FontSize="14" Foreground="#2980B9" Margin="0,0,0,10"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <Label Grid.Row="0" Grid.Column="0" Content="Nume (Unic):" VerticalAlignment="Top" Margin="0,8,0,0"/>
+                                <StackPanel Grid.Row="0" Grid.Column="1" Margin="5">
+                                    <TextBox x:Name="txtNumeFarmacie" Text="{Binding FarmacieCurenta.Nume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+                                    <TextBlock FontSize="11" Foreground="Red" Text="{Binding ElementName=txtNumeFarmacie, Path=(Validation.Errors)/ErrorContent}" Margin="0,2,0,0"/>
+                                </StackPanel>
+
+                                <Label Grid.Row="0" Grid.Column="2" Content="Oraș:" VerticalAlignment="Top" Margin="0,8,0,0"/>
+                                <ComboBox Grid.Row="0" Grid.Column="3" Margin="5" VerticalAlignment="Top" Height="30" SelectedValuePath="Content" SelectedValue="{Binding FarmacieCurenta.Oras, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                    <ComboBoxItem Content="Suceava"/>
+                                    <ComboBoxItem Content="Botoșani"/>
+                                    <ComboBoxItem Content="Piatra Neamț"/>
+                                </ComboBox>
+
+                                <Label Grid.Row="1" Grid.Column="0" Content="Adresă Exactă:" VerticalAlignment="Top" Margin="0,8,0,0"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Margin="5" VerticalAlignment="Top" Text="{Binding FarmacieCurenta.Adresa, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <Label Grid.Row="2" Grid.Column="0" Content="Telefon:" VerticalAlignment="Top" Margin="0,8,0,0"/>
+                                <StackPanel Grid.Row="2" Grid.Column="1" Margin="5">
+                                    <TextBox x:Name="txtTelefonFarmacie" Text="{Binding FarmacieCurenta.Telefon, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+                                    <TextBlock FontSize="11" Foreground="Red" Text="{Binding ElementName=txtTelefonFarmacie, Path=(Validation.Errors)/ErrorContent}" Margin="0,2,0,0"/>
+                                </StackPanel>
+
+                                <Label Grid.Row="2" Grid.Column="2" Content="Email:" VerticalAlignment="Top" Margin="0,8,0,0"/>
+                                <StackPanel Grid.Row="2" Grid.Column="3" Margin="5">
+                                    <TextBox x:Name="txtEmailFarmacie" Text="{Binding FarmacieCurenta.Email, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+                                    <TextBlock FontSize="11" Foreground="Red" Text="{Binding ElementName=txtEmailFarmacie, Path=(Validation.Errors)/ErrorContent}" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,15,0,0">
+                                <Button x:Name="btnAdaugaFarmacie" Content="Adaugă" Width="100" Height="30" Background="#27AE60" Foreground="White" Margin="0,0,10,0" Click="btnAdaugaFarmacie_Click" IsEnabled="{Binding FarmacieCurenta.EsteValid}"/>
+                                <Button x:Name="btnModificaFarmacie" Content="Modifică" Width="100" Height="30" Background="#E67E22" Foreground="White" Margin="0,0,10,0" Click="btnModificaFarmacie_Click" IsEnabled="{Binding FarmacieCurenta.EsteValid}"/>
+                                <Button x:Name="btnStergeFarmacie" Content="Șterge" Width="100" Height="30" Background="#C0392B" Foreground="White" Margin="0,0,10,0" Click="btnStergeFarmacie_Click"/>
+                                <Button x:Name="btnResetFarmacie" Content="Resetare" Width="80" Height="30" Background="#95A5A6" Foreground="White" Click="btnResetFarmacie_Click"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </Border>
 
             <Label x:Name="lblStatus" Grid.Row="1" Margin="0,10,0,10" Foreground="Green" HorizontalAlignment="Center"/>
@@ -194,6 +465,12 @@
                     <DataGridTextColumn Header="Actualizat" Binding="{Binding DataActualizare, StringFormat=HH:mm (dd.MM)}" Width="90"/>
                 </DataGrid.Columns>
             </DataGrid>
+
+            <StackPanel x:Name="panouPaginare" Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
+                <Button x:Name="btnPaginaAnterioara" Content="🡄 Pagina Anterioară" Width="140" Height="28" Background="#34495E" Foreground="White" Click="btnPaginaAnterioara_Click"/>
+                <Label x:Name="lblPaginare" Content="Pagina 1 din 1" VerticalAlignment="Center" Margin="15,0,15,0" FontWeight="Bold" FontSize="14"/>
+                <Button x:Name="btnPaginaUrmatoare" Content="Pagina Următoare 🡆" Width="140" Height="28" Background="#34495E" Foreground="White" Click="btnPaginaUrmatoare_Click"/>
+            </StackPanel>
 
         </Grid>
     </Grid>
