@@ -299,7 +299,7 @@ namespace NivelUIWPF
         // HEADER: SISTEM DE PAGINARE (LINQ Skip / Take)
         // =========================================================================
 
-        // Aici este logica centrală care împarte lista mare în subliste de 20 elemente
+        
         // Aici este logica centrală care împarte lista mare în subliste de 20 elemente
         private void AfiseazaInTabel(List<Medicament> lista, bool reseteazaPagina = true)
         {
