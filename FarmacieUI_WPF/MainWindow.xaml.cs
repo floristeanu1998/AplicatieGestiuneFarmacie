@@ -20,7 +20,7 @@ namespace NivelUIWPF
         private IStocareData adminMedicamente;
         private IStocareFarmacii adminFarmacii;
 
-        // Aici sunt variabilele pentru controlul Paginării (Optimizare RAM)
+        // Aici sunt variabilele pentru controlul Paginării 
         private int paginaCurenta = 1;
         private int elementePePagina = 20;
         private List<Medicament> listaCurentaMedicamente = new List<Medicament>();
@@ -326,7 +326,7 @@ namespace NivelUIWPF
             }
 
             if (lblPaginare != null)
-                lblPaginare.Content = $"Pagina {paginaCurenta} din {totalPagini} (Total arhivă: {listaCurentaMedicamente.Count})";
+                lblPaginare.Content = $"Pagina {paginaCurenta} din {totalPagini} (Total Stoc: {listaCurentaMedicamente.Count})";
 
             if (btnPaginaAnterioara != null)
                 btnPaginaAnterioara.IsEnabled = paginaCurenta > 1;
