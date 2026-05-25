@@ -5,14 +5,22 @@
         MinWidth="900" MinHeight="650" Height="700" Width="1050"
         Background="#F4F6F6">
 
+    <!-- ========================
+         RESURSE GLOBALE
+         Conține: template eroare, perii de culori, stiluri pentru toate controalele
+    ======================== -->
     <Window.Resources>
 
+        <!-- Template personalizat de eroare de validare:
+             bordură roșie care pulsează (fade între 1.0 și 0.3, la infinit) + mesaj de eroare sub câmp.
+             Referit prin Validation.ErrorTemplate="{StaticResource PulsingErrorTemplate}" pe câmpuri. -->
         <ControlTemplate x:Key="PulsingErrorTemplate">
             <StackPanel>
                 <Border BorderBrush="#E74C3C" BorderThickness="2" CornerRadius="4">
                     <Border.Triggers>
                         <EventTrigger RoutedEvent="Loaded">
                             <BeginStoryboard>
+                                <!-- Animație: opacitate oscilează continuu între 1.0 și 0.3 -->
                                 <Storyboard AutoReverse="True" RepeatBehavior="Forever">
                                     <DoubleAnimation Storyboard.TargetProperty="Opacity" From="1.0" To="0.3" Duration="0:0:0.6" />
                                 </Storyboard>
@@ -21,22 +29,41 @@
                     </Border.Triggers>
                     <AdornedElementPlaceholder x:Name="adornedElement"/>
                 </Border>
+                <!-- Mesajul de eroare afișat sub câmpul invalid -->
                 <TextBlock Text="{Binding [0].ErrorContent}" Foreground="#E74C3C" FontSize="11" Margin="2,4,0,0" FontWeight="Bold"/>
             </StackPanel>
         </ControlTemplate>
 
+        <!-- ========================
+             PERII DE CULORI (paletă centralizată)
+             Referite prin {StaticResource NumeCuloare} în stiluri și controale
+        ======================== -->
         <SolidColorBrush x:Key="CuloarePrimara" Color="#2C3E50"/>
-        <SolidColorBrush x:Key="CuloareAccent" Color="#3498DB"/>
-        <SolidColorBrush x:Key="CuloareHover" Color="#ECF0F1"/>
-        <SolidColorBrush x:Key="CuloareChenar" Color="#BDC3C7"/>
-        <SolidColorBrush x:Key="CuloareText" Color="#34495E"/>
+        <!-- Fundal meniu lateral -->
+        <SolidColorBrush x:Key="CuloareAccent"  Color="#3498DB"/>
+        <!-- Albastru: focus, selectat, bifat -->
+        <SolidColorBrush x:Key="CuloareHover"   Color="#ECF0F1"/>
+        <!-- Gri deschis: hover pe itemi -->
+        <SolidColorBrush x:Key="CuloareChenar"  Color="#BDC3C7"/>
+        <!-- Gri: borduri input-uri -->
+        <SolidColorBrush x:Key="CuloareText"    Color="#34495E"/>
+        <!-- Gri închis: text etichete -->
 
+        <!-- ========================
+             STIL GLOBAL: Label
+             Font Segoe UI, semi-bold, culoare text standard
+        ======================== -->
         <Style TargetType="Label">
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Foreground" Value="{StaticResource CuloareText}"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
         </Style>
 
+        <!-- ========================
+             STIL BAZĂ PENTRU INPUT-URI (TextBox, DatePicker, ComboBox)
+             Înălțime fixă 32px, bordură gri, fundal alb.
+             TextBox, DatePicker și ComboBox moștenesc din acesta prin BasedOn.
+        ======================== -->
         <Style TargetType="Control" x:Key="StilInputBaza">
             <Setter Property="Height" Value="32"/>
             <Setter Property="FontSize" Value="14"/>
@@ -46,19 +73,29 @@
             <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
 
+        <!-- ========================
+             STIL GLOBAL: TextBox
+             Moștenește StilInputBaza; adaugă colțuri rotunjite și schimbă culoarea bordurii la focus/hover
+        ======================== -->
         <Style TargetType="TextBox" BasedOn="{StaticResource StilInputBaza}">
             <Setter Property="Padding" Value="8,0"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
-                        <Border x:Name="border" Background="{TemplateBinding Background}" 
-                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
+                        <!-- Bordură cu colțuri rotunjite, schimbă culoarea la focus și hover -->
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4">
                             <ScrollViewer x:Name="PART_ContentHost" Margin="0"/>
                         </Border>
                         <ControlTemplate.Triggers>
+                            <!-- La focus: bordura devine albastru accent -->
                             <Trigger Property="IsFocused" Value="true">
                                 <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource CuloareAccent}"/>
                             </Trigger>
+                            <!-- La hover: bordura devine gri mediu -->
                             <Trigger Property="IsMouseOver" Value="true">
                                 <Setter TargetName="border" Property="BorderBrush" Value="#95A5A6"/>
                             </Trigger>
@@ -68,9 +105,14 @@
             </Setter>
         </Style>
 
+        <!-- DatePicker și ComboBox preiau StilInputBaza fără modificări suplimentare -->
         <Style TargetType="DatePicker" BasedOn="{StaticResource StilInputBaza}"/>
-        <Style TargetType="ComboBox" BasedOn="{StaticResource StilInputBaza}"/>
+        <Style TargetType="ComboBox"   BasedOn="{StaticResource StilInputBaza}"/>
 
+        <!-- ========================
+             STIL GLOBAL: Button
+             Colțuri rotunjite, cursor mână, efecte de opacitate la hover/press/disabled
+        ======================== -->
         <Style TargetType="Button">
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontWeight" Value="Bold"/>
@@ -82,12 +124,15 @@
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,5"/>
                         </Border>
                         <ControlTemplate.Triggers>
+                            <!-- Hover: ușor transparent -->
                             <Trigger Property="IsMouseOver" Value="true">
                                 <Setter TargetName="border" Property="Opacity" Value="0.85"/>
                             </Trigger>
+                            <!-- Apăsat: mai transparent -->
                             <Trigger Property="IsPressed" Value="true">
                                 <Setter TargetName="border" Property="Opacity" Value="0.65"/>
                             </Trigger>
+                            <!-- Dezactivat: gri, text gri închis -->
                             <Trigger Property="IsEnabled" Value="false">
                                 <Setter TargetName="border" Property="Background" Value="#BDC3C7"/>
                                 <Setter Property="Foreground" Value="#7F8C8D"/>
@@ -98,6 +143,10 @@
             </Setter>
         </Style>
 
+        <!-- ========================
+             STIL GLOBAL: CheckBox
+             Cutie pătrată personalizată cu bifă (Path SVG); albastru accent când e bifat
+        ======================== -->
         <Style TargetType="CheckBox">
             <Setter Property="Foreground" Value="{StaticResource CuloareText}"/>
             <Setter Property="FontSize" Value="13"/>
@@ -107,21 +156,25 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
                         <StackPanel Orientation="Horizontal">
-                            <Border x:Name="checkBoxBorder" Width="18" Height="18" 
-                                    BorderBrush="{StaticResource CuloareChenar}" BorderThickness="1.5" 
+                            <!-- Căsuța de bifare: pătrat cu colțuri rotunjite -->
+                            <Border x:Name="checkBoxBorder" Width="18" Height="18"
+                                    BorderBrush="{StaticResource CuloareChenar}" BorderThickness="1.5"
                                     Background="White" CornerRadius="3" VerticalAlignment="Center">
-                                <Path x:Name="checkMark" Data="M 3,9 L 7,13 L 14,4" 
-                                      Stroke="White" StrokeThickness="2" Visibility="Collapsed" 
+                                <!-- Bifa SVG (invizibilă implicit, apare la IsChecked=true) -->
+                                <Path x:Name="checkMark" Data="M 3,9 L 7,13 L 14,4"
+                                      Stroke="White" StrokeThickness="2" Visibility="Collapsed"
                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <ContentPresenter Margin="8,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
                         <ControlTemplate.Triggers>
+                            <!-- Bifat: fundal albastru + bifă vizibilă -->
                             <Trigger Property="IsChecked" Value="true">
-                                <Setter TargetName="checkBoxBorder" Property="Background" Value="{StaticResource CuloareAccent}"/>
-                                <Setter TargetName="checkBoxBorder" Property="BorderBrush" Value="{StaticResource CuloareAccent}"/>
-                                <Setter TargetName="checkMark" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="checkBoxBorder" Property="Background"   Value="{StaticResource CuloareAccent}"/>
+                                <Setter TargetName="checkBoxBorder" Property="BorderBrush"  Value="{StaticResource CuloareAccent}"/>
+                                <Setter TargetName="checkMark"      Property="Visibility"   Value="Visible"/>
                             </Trigger>
+                            <!-- Hover: bordura devine albastră -->
                             <Trigger Property="IsMouseOver" Value="true">
                                 <Setter TargetName="checkBoxBorder" Property="BorderBrush" Value="{StaticResource CuloareAccent}"/>
                             </Trigger>
@@ -131,6 +184,10 @@
             </Setter>
         </Style>
 
+        <!-- ========================
+             STIL GLOBAL: RadioButton
+             Cerc personalizat cu punct interior albastru când e selectat
+        ======================== -->
         <Style TargetType="RadioButton">
             <Setter Property="Foreground" Value="{StaticResource CuloareText}"/>
             <Setter Property="FontSize" Value="13"/>
@@ -139,20 +196,24 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
                         <StackPanel Orientation="Horizontal">
-                            <Border x:Name="radioBorder" Width="18" Height="18" 
-                                    BorderBrush="{StaticResource CuloareChenar}" BorderThickness="1.5" 
+                            <!-- Cercul exterior al radio button-ului -->
+                            <Border x:Name="radioBorder" Width="18" Height="18"
+                                    BorderBrush="{StaticResource CuloareChenar}" BorderThickness="1.5"
                                     Background="White" CornerRadius="9" VerticalAlignment="Center">
-                                <Border x:Name="radioMark" Width="8" Height="8" 
-                                        Background="{StaticResource CuloareAccent}" CornerRadius="4" 
+                                <!-- Punctul interior albastru (invizibil implicit, apare la IsChecked=true) -->
+                                <Border x:Name="radioMark" Width="8" Height="8"
+                                        Background="{StaticResource CuloareAccent}" CornerRadius="4"
                                         Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <ContentPresenter Margin="8,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
                         <ControlTemplate.Triggers>
+                            <!-- Selectat: bordura albastră + punct interior vizibil -->
                             <Trigger Property="IsChecked" Value="true">
                                 <Setter TargetName="radioBorder" Property="BorderBrush" Value="{StaticResource CuloareAccent}"/>
-                                <Setter TargetName="radioMark" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="radioMark"   Property="Visibility"  Value="Visible"/>
                             </Trigger>
+                            <!-- Hover: bordura devine albastră -->
                             <Trigger Property="IsMouseOver" Value="true">
                                 <Setter TargetName="radioBorder" Property="BorderBrush" Value="{StaticResource CuloareAccent}"/>
                             </Trigger>
@@ -162,17 +223,25 @@
             </Setter>
         </Style>
 
+        <!-- ========================
+             STIL GLOBAL: ListBox
+             Bordură gri, fundal alb, padding mic
+        ======================== -->
         <Style TargetType="ListBox">
-            <Setter Property="BorderBrush" Value="{StaticResource CuloareChenar}"/>
+            <Setter Property="BorderBrush"     Value="{StaticResource CuloareChenar}"/>
             <Setter Property="BorderThickness" Value="1.5"/>
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="Padding" Value="2"/>
+            <Setter Property="Background"      Value="White"/>
+            <Setter Property="Padding"         Value="2"/>
         </Style>
 
+        <!-- ========================
+             STIL GLOBAL: ListBoxItem
+             Colțuri rotunjite, hover gri deschis, selectat albastru accent
+        ======================== -->
         <Style TargetType="ListBoxItem">
-            <Setter Property="Padding" Value="8,5"/>
-            <Setter Property="Margin" Value="0,2"/>
-            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding"  Value="8,5"/>
+            <Setter Property="Margin"   Value="0,2"/>
+            <Setter Property="Cursor"   Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
@@ -180,9 +249,11 @@
                             <ContentPresenter Margin="{TemplateBinding Padding}"/>
                         </Border>
                         <ControlTemplate.Triggers>
+                            <!-- Hover: fundal gri deschis -->
                             <Trigger Property="IsMouseOver" Value="true">
                                 <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource CuloareHover}"/>
                             </Trigger>
+                            <!-- Selectat: fundal albastru accent + text alb -->
                             <Trigger Property="IsSelected" Value="true">
                                 <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource CuloareAccent}"/>
                                 <Setter Property="Foreground" Value="White"/>
@@ -193,41 +264,55 @@
             </Setter>
         </Style>
 
+        <!-- ========================
+             STIL GLOBAL: DataGrid
+             Rânduri albe/gri alternate, linii orizontale subtile, înălțime rând 32px
+        ======================== -->
         <Style TargetType="DataGrid">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="BorderBrush" Value="#E0E0E0"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="RowBackground" Value="White"/>
+            <Setter Property="Background"            Value="White"/>
+            <Setter Property="BorderBrush"           Value="#E0E0E0"/>
+            <Setter Property="BorderThickness"       Value="1"/>
+            <Setter Property="RowBackground"         Value="White"/>
             <Setter Property="AlternatingRowBackground" Value="#F8F9F9"/>
-            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+            <Setter Property="GridLinesVisibility"   Value="Horizontal"/>
             <Setter Property="HorizontalGridLinesBrush" Value="#EAECEE"/>
-            <Setter Property="RowHeight" Value="32"/>
-            <Setter Property="HeadersVisibility" Value="Column"/>
-            <Setter Property="SelectionUnit" Value="FullRow"/>
+            <Setter Property="RowHeight"             Value="32"/>
+            <Setter Property="HeadersVisibility"     Value="Column"/>
+            <Setter Property="SelectionUnit"         Value="FullRow"/>
         </Style>
 
+        <!-- ========================
+             STIL GLOBAL: DataGridColumnHeader
+             Fundal gri deschis, text bold, linie de separator jos
+        ======================== -->
         <Style TargetType="DataGridColumnHeader">
-            <Setter Property="Background" Value="#ECF0F1"/>
-            <Setter Property="Foreground" Value="{StaticResource CuloareText}"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Padding" Value="10,8"/>
-            <Setter Property="BorderThickness" Value="0,0,0,1"/>
-            <Setter Property="BorderBrush" Value="{StaticResource CuloareChenar}"/>
+            <Setter Property="Background"       Value="#ECF0F1"/>
+            <Setter Property="Foreground"       Value="{StaticResource CuloareText}"/>
+            <Setter Property="FontWeight"       Value="Bold"/>
+            <Setter Property="Padding"          Value="10,8"/>
+            <Setter Property="BorderThickness"  Value="0,0,0,1"/>
+            <Setter Property="BorderBrush"      Value="{StaticResource CuloareChenar}"/>
         </Style>
 
+        <!-- ========================
+             STIL GLOBAL: ScrollBar
+             Scrollbar minimalistă: lățime 8px, thumb gri rotunjit, fără butoane săgeată
+        ======================== -->
         <Style TargetType="ScrollBar">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Width" Value="8"/>
+            <Setter Property="Width"      Value="8"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ScrollBar">
                         <Grid>
                             <Border Background="Transparent"/>
+                            <!-- Track-ul scrollbar-ului (direcție inversată = de sus în jos) -->
                             <Track x:Name="PART_Track" IsDirectionReversed="true">
                                 <Track.Thumb>
                                     <Thumb>
                                         <Thumb.Template>
                                             <ControlTemplate TargetType="Thumb">
+                                                <!-- Thumb-ul vizibil: dreptunghi gri cu colțuri rotunjite -->
                                                 <Border Background="#BDC3C7" CornerRadius="4" Margin="2,0"/>
                                             </ControlTemplate>
                                         </Thumb.Template>
@@ -241,144 +326,232 @@
         </Style>
     </Window.Resources>
 
+    <!-- ========================
+         LAYOUT PRINCIPAL
+         2 coloane: meniu lateral stânga (200px) + conținut principal (restul)
+    ======================== -->
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="200"/>
+            <!-- Coloana 0: meniu lateral -->
             <ColumnDefinition Width="*"/>
+            <!-- Coloana 1: conținut principal -->
         </Grid.ColumnDefinitions>
 
+        <!-- ========================
+             MENIU LATERAL STÂNGA
+             Fundal închis (#2C3E50), butoane de navigare între secțiuni
+        ======================== -->
         <Border Grid.Column="0" Background="#2C3E50" Padding="10">
             <StackPanel Margin="0,20,0,0">
+                <!-- Titlu aplicație -->
                 <TextBlock Text="FARMACIE" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,30"/>
 
-                <Button x:Name="btnMeniuAdauga" Content="➕ Adaugă Medicament" Height="40" Background="#34495E" Foreground="White" BorderThickness="0" Margin="0,0,0,10" Click="btnMeniuAdauga_Click"/>
+                <!-- Buton: afișează panouAdaugare -->
+                <Button x:Name="btnMeniuAdauga"   Content="➕ Adaugă Medicament"  Height="40" Background="#34495E" Foreground="White" BorderThickness="0" Margin="0,0,0,10" Click="btnMeniuAdauga_Click"/>
+                <!-- Buton: afișează panouModifica -->
                 <Button x:Name="btnMeniuModifica" Content="✏️ Modifică Medicament" Height="40" Background="#34495E" Foreground="White" BorderThickness="0" Margin="0,0,0,10" Click="btnMeniuModifica_Click"/>
-                <Button x:Name="btnMeniuCauta" Content="🔍 Caută Medicament" Height="40" Background="#34495E" Foreground="White" BorderThickness="0" Margin="0,0,0,30" Click="btnMeniuCauta_Click"/>
-                <Button x:Name="btnMeniuFarmacii" Content="🏥 Rețea Farmacii" Height="40" Background="#8E44AD" Foreground="White" BorderThickness="0" Click="btnMeniuFarmacii_Click"/>
+                <!-- Buton: afișează panouCautare -->
+                <Button x:Name="btnMeniuCauta"    Content="🔍 Caută Medicament"   Height="40" Background="#34495E" Foreground="White" BorderThickness="0" Margin="0,0,0,30" Click="btnMeniuCauta_Click"/>
+                <!-- Buton: afișează panouFarmacii (violet, secțiune separată) -->
+                <Button x:Name="btnMeniuFarmacii" Content="🏥 Rețea Farmacii"     Height="40" Background="#8E44AD" Foreground="White" BorderThickness="0" Click="btnMeniuFarmacii_Click"/>
             </StackPanel>
         </Border>
 
+        <!-- ========================
+             ZONA DE CONȚINUT PRINCIPAL (coloana dreaptă)
+             4 rânduri: panou activ (Auto) | status (Auto) | tabel medicamente (*) | paginare (Auto)
+        ======================== -->
         <Grid Grid.Column="1" Margin="20">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
+                <!-- Rând 0: panoul activ (unul dintre cele 4 panouri) -->
                 <RowDefinition Height="Auto"/>
+                <!-- Rând 1: eticheta de status -->
                 <RowDefinition Height="*"/>
+                <!-- Rând 2: tabelul principal cu medicamente -->
                 <RowDefinition Height="Auto"/>
+                <!-- Rând 3: controalele de paginare -->
             </Grid.RowDefinitions>
 
+            <!-- ========================
+                 PANOUL: ADĂUGARE MEDICAMENT
+                 Vizibil implicit; celelalte panouri sunt Collapsed.
+                 Câmpurile sunt legate prin binding la MedicamentCurent din ViewModel,
+                 cu validare activă (ValidatesOnDataErrors) și PulsingErrorTemplate.
+                 3 coloane: date de bază | formă + condiții | categorie
+            ======================== -->
             <StackPanel x:Name="panouAdaugare" Grid.Row="0" Visibility="Visible">
                 <Label Content="Adăugare Medicament Nou (Validare Activă)" FontSize="16" Foreground="#27AE60" Margin="0,0,0,10"/>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
+                        <!-- Coloana 0: câmpuri text + dată -->
                         <ColumnDefinition Width="*"/>
+                        <!-- Coloana 1: formă prezentare + condiții păstrare -->
                         <ColumnDefinition Width="*"/>
+                        <!-- Coloana 2: selector categorie -->
                     </Grid.ColumnDefinitions>
 
+                    <!-- Coloana 0: Denumire, Preț, Stoc, Data Expirării (toate cu validare pulsantă) -->
                     <StackPanel Grid.Column="0" Margin="0,0,15,0">
                         <Label Content="Denumire (Obligatoriu):"/>
-                        <TextBox x:Name="txtDenumire" Validation.ErrorTemplate="{StaticResource PulsingErrorTemplate}"
+                        <!-- Câmp denumire: obligatoriu, eroare pulsantă dacă e gol -->
+                        <TextBox x:Name="txtDenumire"
+                                 Validation.ErrorTemplate="{StaticResource PulsingErrorTemplate}"
                                  Text="{Binding MedicamentCurent.Denumire, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
 
                         <Label Content="Preț (RON):" Margin="0,15,0,0"/>
-                        <TextBox x:Name="txtPret" Validation.ErrorTemplate="{StaticResource PulsingErrorTemplate}"
+                        <!-- Câmp preț: trebuie să fie număr pozitiv, validat -->
+                        <TextBox x:Name="txtPret"
+                                 Validation.ErrorTemplate="{StaticResource PulsingErrorTemplate}"
                                  Text="{Binding MedicamentCurent.Pret, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
 
                         <Label Content="Stoc (Buc):" Margin="0,15,0,0"/>
-                        <TextBox x:Name="txtStoc" Validation.ErrorTemplate="{StaticResource PulsingErrorTemplate}"
+                        <!-- Câmp stoc: număr întreg, validat -->
+                        <TextBox x:Name="txtStoc"
+                                 Validation.ErrorTemplate="{StaticResource PulsingErrorTemplate}"
                                  Text="{Binding MedicamentCurent.CantitateStoc, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
 
                         <Label Content="Data Expirării:" Margin="0,15,0,0"/>
-                        <DatePicker x:Name="dtpDataExpirare" Height="30" FontSize="14" Validation.ErrorTemplate="{StaticResource PulsingErrorTemplate}"
+                        <!-- Selector dată expirare: validat (nu poate fi în trecut) -->
+                        <DatePicker x:Name="dtpDataExpirare" Height="30" FontSize="14"
+                                    Validation.ErrorTemplate="{StaticResource PulsingErrorTemplate}"
                                     SelectedDate="{Binding MedicamentCurent.DataExpirare, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
                     </StackPanel>
 
+                    <!-- Coloana 1: Forma de prezentare (RadioButtons) + Condiții de păstrare (CheckBoxes) -->
                     <StackPanel Grid.Column="1" Margin="10,0,10,0">
                         <Label Content="Forma de prezentare:"/>
+                        <!-- Grup radio: selectare exclusivă a formei farmaceutice -->
                         <WrapPanel Margin="0,5,0,10">
-                            <RadioButton x:Name="rbComprimate" Content="Comprimate" GroupName="Forma" IsChecked="True" Margin="0,0,10,5"/>
-                            <RadioButton x:Name="rbSirop" Content="Sirop" GroupName="Forma" Margin="0,0,10,5"/>
-                            <RadioButton x:Name="rbUnguent" Content="Unguent" GroupName="Forma" Margin="0,0,10,5"/>
-                            <RadioButton x:Name="rbSolutie" Content="Soluție Inj." GroupName="Forma" Margin="0,0,10,5"/>
+                            <RadioButton x:Name="rbComprimate" Content="Comprimate"  GroupName="Forma" IsChecked="True" Margin="0,0,10,5"/>
+                            <RadioButton x:Name="rbSirop"      Content="Sirop"        GroupName="Forma" Margin="0,0,10,5"/>
+                            <RadioButton x:Name="rbUnguent"    Content="Unguent"      GroupName="Forma" Margin="0,0,10,5"/>
+                            <RadioButton x:Name="rbSolutie"    Content="Soluție Inj." GroupName="Forma" Margin="0,0,10,5"/>
                         </WrapPanel>
 
                         <Label Content="Condiții de păstrare:"/>
+                        <!-- Grup checkbox: se pot bifa mai multe condiții simultan -->
                         <Border BorderBrush="LightGray" BorderThickness="1" Padding="5">
                             <WrapPanel>
-                                <CheckBox x:Name="chkTempCamerei" Content="Temp. camerei" Margin="5"/>
-                                <CheckBox x:Name="chkRefrigerare" Content="Refrigerare" Margin="5"/>
-                                <CheckBox x:Name="chkCongelare" Content="Congelare" Margin="5"/>
-                                <CheckBox x:Name="chkLumina" Content="Ferit de lumină" Margin="5"/>
-                                <CheckBox x:Name="chkUmiditate" Content="Ferit de umiditate" Margin="5"/>
+                                <CheckBox x:Name="chkTempCamerei" Content="Temp. camerei"    Margin="5"/>
+                                <CheckBox x:Name="chkRefrigerare" Content="Refrigerare"       Margin="5"/>
+                                <CheckBox x:Name="chkCongelare"   Content="Congelare"          Margin="5"/>
+                                <CheckBox x:Name="chkLumina"      Content="Ferit de lumină"    Margin="5"/>
+                                <CheckBox x:Name="chkUmiditate"   Content="Ferit de umiditate" Margin="5"/>
                             </WrapPanel>
                         </Border>
                     </StackPanel>
 
+                    <!-- Coloana 2: ListBox pentru selecția categoriei (single select, populat din cod) -->
                     <StackPanel Grid.Column="2" Margin="10,0,0,0">
                         <Label Content="Categorie (Selecție unică):"/>
                         <ListBox x:Name="lstCategorieAdaugare" Height="150" SelectionMode="Single" Background="#FDFDFD" BorderBrush="#CCCCCC" Padding="5"/>
                     </StackPanel>
                 </Grid>
 
-                <Button x:Name="btnSalveaza" Content="Salvează Medicament" Width="180" Height="35" Background="#27AE60" Foreground="White" FontWeight="Bold" Margin="0,20,0,0" HorizontalAlignment="Left" 
-                        Click="btnSalveaza_Click" IsEnabled="{Binding MedicamentCurent.EsteValid}"/>
+                <!-- Buton salvare: activ doar când MedicamentCurent.EsteValid = true (toate câmpurile valide) -->
+                <Button x:Name="btnSalveaza" Content="Salvează Medicament" Width="180" Height="35"
+                        Background="#27AE60" Foreground="White" FontWeight="Bold"
+                        Margin="0,20,0,0" HorizontalAlignment="Left"
+                        Click="btnSalveaza_Click"
+                        IsEnabled="{Binding MedicamentCurent.EsteValid}"/>
             </StackPanel>
 
+            <!-- ========================
+                 PANOUL: MODIFICARE MEDICAMENT
+                 Ascuns implicit (Collapsed); apare la click pe "Modifică Medicament".
+                 Fără validare pulsantă — câmpurile sunt simple TextBox-uri.
+            ======================== -->
             <Border x:Name="panouModifica" Grid.Row="0" Visibility="Collapsed" Background="#FDFEFE" Padding="15" BorderBrush="#D5D8DC" BorderThickness="1" CornerRadius="5">
                 <StackPanel>
                     <Label Content="1. Selectează Medicamentul pe care vrei să-l modifici:"/>
-                    <ComboBox x:Name="cmbMedicamenteModificare" Height="30" FontSize="14" DisplayMemberPath="AfisareComboBox" SelectionChanged="cmbMedicamenteModificare_SelectionChanged" Margin="0,0,0,15"/>
+                    <!-- ComboBox: lista tuturor medicamentelor; la selecție populează câmpurile de jos -->
+                    <ComboBox x:Name="cmbMedicamenteModificare" Height="30" FontSize="14"
+                              DisplayMemberPath="AfisareComboBox"
+                              SelectionChanged="cmbMedicamenteModificare_SelectionChanged"
+                              Margin="0,0,0,15"/>
 
+                    <!-- 2 coloane: Denumire/Preț (stânga) | Stoc/Dată (dreapta) -->
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
+                            <!-- Coloana 0: Denumire nouă + Preț nou -->
                             <ColumnDefinition Width="*"/>
+                            <!-- Coloana 1: Stoc nou + Dată expirare nouă -->
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0" Margin="0,0,10,0">
                             <Label Content="Noua Denumire:"/>
                             <TextBox x:Name="txtModificaDenumire"/>
+                            <!-- Câmp: noua denumire -->
                             <Label Content="Noul Preț (RON):" Margin="0,10,0,0"/>
                             <TextBox x:Name="txtModificaPret"/>
+                            <!-- Câmp: noul preț -->
                         </StackPanel>
 
                         <StackPanel Grid.Column="1" Margin="10,0,0,0">
                             <Label Content="Noul Stoc:"/>
                             <TextBox x:Name="txtModificaStoc"/>
+                            <!-- Câmp: noul stoc -->
                             <Label Content="Noua Dată a Expirării:" Margin="0,10,0,0"/>
                             <DatePicker x:Name="dtpModificaDataExpirare" Height="30" FontSize="14"/>
+                            <!-- Selector noua dată -->
                         </StackPanel>
                     </Grid>
 
-                    <Button x:Name="btnActualizeaza" Content="Actualizează Datele" Width="180" Height="35" Background="#E67E22" Foreground="White" FontWeight="Bold" Margin="0,20,0,0" HorizontalAlignment="Left" Click="btnActualizeaza_Click"/>
+                    <!-- Buton de confirmare a modificărilor -->
+                    <Button x:Name="btnActualizeaza" Content="Actualizează Datele" Width="180" Height="35"
+                            Background="#E67E22" Foreground="White" FontWeight="Bold"
+                            Margin="0,20,0,0" HorizontalAlignment="Left"
+                            Click="btnActualizeaza_Click"/>
                 </StackPanel>
             </Border>
 
+            <!-- ========================
+                 PANOUL: CĂUTARE MEDICAMENT
+                 Ascuns implicit (Collapsed); apare la click pe "Caută Medicament"
+            ======================== -->
             <Border x:Name="panouCautare" Grid.Row="0" Visibility="Collapsed" Background="#E8ECEF" Padding="15" CornerRadius="5">
                 <StackPanel>
                     <Label Content="Caută după denumire:"/>
                     <StackPanel Orientation="Horizontal">
                         <TextBox x:Name="txtCautare" Width="250" Margin="0,0,10,0"/>
-                        <Button x:Name="btnExecutaCautare" Content="Caută" Width="100" Background="#2980B9" Foreground="White" Click="btnExecutaCautare_Click"/>
-                        <Button x:Name="btnAfiseazaToti" Content="Arată Toți" Width="100" Margin="10,0,0,0" Background="#95A5A6" Foreground="White" Click="btnAfiseazaToti_Click"/>
+                        <!-- Câmp: text de căutat -->
+                        <!-- Buton: filtrează tabelul după textul introdus -->
+                        <Button x:Name="btnExecutaCautare" Content="Caută"      Width="100" Background="#2980B9" Foreground="White" Click="btnExecutaCautare_Click"/>
+                        <!-- Buton: resetează filtrarea și afișează toate medicamentele -->
+                        <Button x:Name="btnAfiseazaToti"   Content="Arată Toți" Width="100" Margin="10,0,0,0"  Background="#95A5A6" Foreground="White" Click="btnAfiseazaToti_Click"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
 
+            <!-- ========================
+                 PANOUL: GESTIUNE REȚEA FARMACII
+                 Ascuns implicit (Collapsed); ocupă toate cele 4 rânduri (Grid.RowSpan="4"),
+                 acoperind status, tabel și paginare când e activ.
+                 Structură internă: 3 rânduri — titlu/filtru | tabel farmacii | formular detalii
+            ======================== -->
             <Border x:Name="panouFarmacii" Grid.Row="0" Grid.RowSpan="4" Visibility="Collapsed" Background="#F4F6F6" Padding="0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
+                        <!-- Rând 0: titlu secțiune + filtru după oraș -->
                         <RowDefinition Height="*"/>
+                        <!-- Rând 1: tabelul cu farmaciile -->
                         <RowDefinition Height="Auto"/>
+                        <!-- Rând 2: formular adăugare/editare farmacie -->
                     </Grid.RowDefinitions>
 
+                    <!-- Rând 0: Titlu + ComboBox filtru după oraș -->
                     <StackPanel Grid.Row="0" Margin="0,0,0,10">
                         <Label Content="🏥 Gestiune Rețea Farmacii" FontSize="18" Foreground="#8E44AD" Margin="0,0,0,5"/>
                         <StackPanel Orientation="Horizontal">
                             <Label Content="Filtrează după Oraș:" VerticalAlignment="Center"/>
+                            <!-- ComboBox: filtrează dgFarmacii după orașul selectat -->
                             <ComboBox x:Name="cmbOrasFiltru" Width="150" Margin="10,0,0,0" SelectionChanged="cmbOrasFiltru_SelectionChanged">
-                                <ComboBoxItem Content="Toate" IsSelected="True"/>
+                                <ComboBoxItem Content="Toate"        IsSelected="True"/>
                                 <ComboBoxItem Content="Suceava"/>
                                 <ComboBoxItem Content="Botoșani"/>
                                 <ComboBoxItem Content="Piatra Neamț"/>
@@ -386,89 +559,146 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <DataGrid x:Name="dgFarmacii" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" 
-                              SelectionChanged="dgFarmacii_SelectionChanged" Margin="0,0,0,15" ColumnWidth="*">
+                    <!-- Rând 1: Tabel cu lista farmaciilor (Nume + Oraș).
+                         La selecție (SelectionChanged) se populează formularul de jos. -->
+                    <DataGrid x:Name="dgFarmacii" Grid.Row="1"
+                              AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                              SelectionChanged="dgFarmacii_SelectionChanged"
+                              Margin="0,0,0,15" ColumnWidth="*">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Nume Farmacie" Binding="{Binding Nume}"/>
-                            <DataGridTextColumn Header="Oraș" Binding="{Binding Oras}"/>
+                            <DataGridTextColumn Header="Oraș"          Binding="{Binding Oras}"/>
                         </DataGrid.Columns>
                     </DataGrid>
 
+                    <!-- Rând 2: Formular detalii farmacie — binding la FarmacieCurenta din ViewModel.
+                         Folosit atât pentru adăugare cât și pentru editarea farmaciei selectate din tabel. -->
                     <Border Grid.Row="2" Background="White" Padding="15" BorderBrush="#D5D8DC" BorderThickness="1" CornerRadius="5">
                         <StackPanel>
                             <Label Content="Detalii Farmacie (Adăugare / Editare)" FontSize="14" Foreground="#2980B9" Margin="0,0,0,10"/>
+
+                            <!-- Grid formular: 4 coloane (Label | Control | Label | Control), 3 rânduri -->
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
+                                    <!-- Label -->
                                     <ColumnDefinition Width="*"/>
+                                    <!-- Control -->
                                     <ColumnDefinition Width="Auto"/>
+                                    <!-- Label -->
                                     <ColumnDefinition Width="*"/>
+                                    <!-- Control -->
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
+                                    <!-- Rând 0: Nume + Oraș -->
                                     <RowDefinition Height="Auto"/>
+                                    <!-- Rând 1: Adresă (span complet) -->
                                     <RowDefinition Height="Auto"/>
+                                    <!-- Rând 2: Telefon + Email -->
                                 </Grid.RowDefinitions>
 
+                                <!-- Rând 0, Col 0-1: Câmp Nume farmacie cu mesaj eroare sub câmp -->
                                 <Label Grid.Row="0" Grid.Column="0" Content="Nume (Unic):" VerticalAlignment="Top" Margin="0,8,0,0"/>
                                 <StackPanel Grid.Row="0" Grid.Column="1" Margin="5">
-                                    <TextBox x:Name="txtNumeFarmacie" Text="{Binding FarmacieCurenta.Nume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
-                                    <TextBlock FontSize="11" Foreground="Red" Text="{Binding ElementName=txtNumeFarmacie, Path=(Validation.Errors)/ErrorContent}" Margin="0,2,0,0"/>
+                                    <TextBox x:Name="txtNumeFarmacie"
+                                             Text="{Binding FarmacieCurenta.Nume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+                                    <!-- Mesaj eroare validare afișat sub câmp -->
+                                    <TextBlock FontSize="11" Foreground="Red"
+                                               Text="{Binding ElementName=txtNumeFarmacie, Path=(Validation.Errors)/ErrorContent}"
+                                               Margin="0,2,0,0"/>
                                 </StackPanel>
 
+                                <!-- Rând 0, Col 2-3: ComboBox selecție oraș farmacie -->
                                 <Label Grid.Row="0" Grid.Column="2" Content="Oraș:" VerticalAlignment="Top" Margin="0,8,0,0"/>
-                                <ComboBox Grid.Row="0" Grid.Column="3" Margin="5" VerticalAlignment="Top" Height="30" SelectedValuePath="Content" SelectedValue="{Binding FarmacieCurenta.Oras, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                <ComboBox Grid.Row="0" Grid.Column="3" Margin="5" VerticalAlignment="Top" Height="30"
+                                          SelectedValuePath="Content"
+                                          SelectedValue="{Binding FarmacieCurenta.Oras, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                                     <ComboBoxItem Content="Suceava"/>
                                     <ComboBoxItem Content="Botoșani"/>
                                     <ComboBoxItem Content="Piatra Neamț"/>
                                 </ComboBox>
 
+                                <!-- Rând 1: Câmp Adresă — se întinde pe toate coloanele de control (ColumnSpan=3) -->
                                 <Label Grid.Row="1" Grid.Column="0" Content="Adresă Exactă:" VerticalAlignment="Top" Margin="0,8,0,0"/>
-                                <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Margin="5" VerticalAlignment="Top" Text="{Binding FarmacieCurenta.Adresa, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Margin="5" VerticalAlignment="Top"
+                                         Text="{Binding FarmacieCurenta.Adresa, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
+                                <!-- Rând 2, Col 0-1: Câmp Telefon cu mesaj eroare sub câmp -->
                                 <Label Grid.Row="2" Grid.Column="0" Content="Telefon:" VerticalAlignment="Top" Margin="0,8,0,0"/>
                                 <StackPanel Grid.Row="2" Grid.Column="1" Margin="5">
-                                    <TextBox x:Name="txtTelefonFarmacie" Text="{Binding FarmacieCurenta.Telefon, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
-                                    <TextBlock FontSize="11" Foreground="Red" Text="{Binding ElementName=txtTelefonFarmacie, Path=(Validation.Errors)/ErrorContent}" Margin="0,2,0,0"/>
+                                    <TextBox x:Name="txtTelefonFarmacie"
+                                             Text="{Binding FarmacieCurenta.Telefon, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+                                    <TextBlock FontSize="11" Foreground="Red"
+                                               Text="{Binding ElementName=txtTelefonFarmacie, Path=(Validation.Errors)/ErrorContent}"
+                                               Margin="0,2,0,0"/>
                                 </StackPanel>
 
+                                <!-- Rând 2, Col 2-3: Câmp Email cu mesaj eroare sub câmp -->
                                 <Label Grid.Row="2" Grid.Column="2" Content="Email:" VerticalAlignment="Top" Margin="0,8,0,0"/>
                                 <StackPanel Grid.Row="2" Grid.Column="3" Margin="5">
-                                    <TextBox x:Name="txtEmailFarmacie" Text="{Binding FarmacieCurenta.Email, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
-                                    <TextBlock FontSize="11" Foreground="Red" Text="{Binding ElementName=txtEmailFarmacie, Path=(Validation.Errors)/ErrorContent}" Margin="0,2,0,0"/>
+                                    <TextBox x:Name="txtEmailFarmacie"
+                                             Text="{Binding FarmacieCurenta.Email, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+                                    <TextBlock FontSize="11" Foreground="Red"
+                                               Text="{Binding ElementName=txtEmailFarmacie, Path=(Validation.Errors)/ErrorContent}"
+                                               Margin="0,2,0,0"/>
                                 </StackPanel>
                             </Grid>
 
+                            <!-- Butoane CRUD farmacie -->
                             <StackPanel Orientation="Horizontal" Margin="0,15,0,0">
-                                <Button x:Name="btnAdaugaFarmacie" Content="Adaugă" Width="100" Height="30" Background="#27AE60" Foreground="White" Margin="0,0,10,0" Click="btnAdaugaFarmacie_Click" IsEnabled="{Binding FarmacieCurenta.EsteValid}"/>
+                                <!-- Adaugă farmacie nouă (activ doar dacă FarmacieCurenta.EsteValid = true) -->
+                                <Button x:Name="btnAdaugaFarmacie"   Content="Adaugă"   Width="100" Height="30" Background="#27AE60" Foreground="White" Margin="0,0,10,0" Click="btnAdaugaFarmacie_Click"   IsEnabled="{Binding FarmacieCurenta.EsteValid}"/>
+                                <!-- Salvează modificările pe farmacia selectată (activ doar dacă EsteValid) -->
                                 <Button x:Name="btnModificaFarmacie" Content="Modifică" Width="100" Height="30" Background="#E67E22" Foreground="White" Margin="0,0,10,0" Click="btnModificaFarmacie_Click" IsEnabled="{Binding FarmacieCurenta.EsteValid}"/>
-                                <Button x:Name="btnStergeFarmacie" Content="Șterge" Width="100" Height="30" Background="#C0392B" Foreground="White" Margin="0,0,10,0" Click="btnStergeFarmacie_Click"/>
-                                <Button x:Name="btnResetFarmacie" Content="Resetare" Width="80" Height="30" Background="#95A5A6" Foreground="White" Click="btnResetFarmacie_Click"/>
+                                <!-- Șterge farmacia selectată din tabel -->
+                                <Button x:Name="btnStergeFarmacie"   Content="Șterge"   Width="100" Height="30" Background="#C0392B" Foreground="White" Margin="0,0,10,0" Click="btnStergeFarmacie_Click"/>
+                                <!-- Golește câmpurile formularului și deselectează din tabel -->
+                                <Button x:Name="btnResetFarmacie"    Content="Resetare" Width="80"  Height="30" Background="#95A5A6" Foreground="White" Click="btnResetFarmacie_Click"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
                 </Grid>
             </Border>
 
+            <!-- ========================
+                 ETICHETA STATUS (Rând 1)
+                 Afișează mesaje de confirmare (verde) sau eroare după operații CRUD
+            ======================== -->
             <Label x:Name="lblStatus" Grid.Row="1" Margin="0,10,0,10" Foreground="Green" HorizontalAlignment="Center"/>
 
-            <DataGrid x:Name="dgMedicamente" Grid.Row="2" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" AlternatingRowBackground="#F9F9F9">
+            <!-- ========================
+                 TABEL PRINCIPAL MEDICAMENTE (Rând 2)
+                 Afișează toate medicamentele sau rezultatele filtrării/paginării.
+                 Stilizat prin stilul global DataGrid (rânduri alternate, header gri, etc.)
+            ======================== -->
+            <DataGrid x:Name="dgMedicamente" Grid.Row="2"
+                      AutoGenerateColumns="False" IsReadOnly="True"
+                      HeadersVisibility="Column" AlternatingRowBackground="#F9F9F9">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="ID" Binding="{Binding IdMedicament}" Width="Auto"/>
-                    <DataGridTextColumn Header="Denumire" Binding="{Binding Denumire}" Width="Auto"/>
-                    <DataGridTextColumn Header="Categorie" Binding="{Binding Categorie}" Width="Auto"/>
-                    <DataGridTextColumn Header="Preț" Binding="{Binding Pret}" Width="Auto"/>
-                    <DataGridTextColumn Header="Stoc" Binding="{Binding CantitateStoc}" Width="Auto"/>
-                    <DataGridTextColumn Header="Formă" Binding="{Binding Forma}" Width="Auto"/>
-                    <DataGridTextColumn Binding="{Binding Conditii}" Header="Condiții" Width="*"/>
-                    <DataGridTextColumn Header="Expiră la" Binding="{Binding DataExpirare, StringFormat=dd.MM.yyyy}" Width="80"/>
+                    <DataGridTextColumn Header="ID"         Binding="{Binding IdMedicament}"                                Width="Auto"/>
+                    <DataGridTextColumn Header="Denumire"   Binding="{Binding Denumire}"                                    Width="Auto"/>
+                    <DataGridTextColumn Header="Categorie"  Binding="{Binding Categorie}"                                   Width="Auto"/>
+                    <DataGridTextColumn Header="Preț"       Binding="{Binding Pret}"                                        Width="Auto"/>
+                    <DataGridTextColumn Header="Stoc"       Binding="{Binding CantitateStoc}"                               Width="Auto"/>
+                    <DataGridTextColumn Header="Formă"      Binding="{Binding Forma}"                                       Width="Auto"/>
+                    <DataGridTextColumn Header="Condiții"   Binding="{Binding Conditii}"                                    Width="*"/>
+                    <DataGridTextColumn Header="Expiră la"  Binding="{Binding DataExpirare,   StringFormat=dd.MM.yyyy}"     Width="80"/>
                     <DataGridTextColumn Header="Actualizat" Binding="{Binding DataActualizare, StringFormat=HH:mm (dd.MM)}" Width="90"/>
                 </DataGrid.Columns>
             </DataGrid>
 
+            <!-- ========================
+                 CONTROALE PAGINARE (Rând 3)
+                 Butoane anterior/următor + etichetă "Pagina X din Y".
+                 Actualizate din cod la fiecare schimbare de pagină.
+            ======================== -->
             <StackPanel x:Name="panouPaginare" Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
+                <!-- Buton: navighează la pagina anterioară -->
                 <Button x:Name="btnPaginaAnterioara" Content="🡄 Pagina Anterioară" Width="140" Height="28" Background="#34495E" Foreground="White" Click="btnPaginaAnterioara_Click"/>
+                <!-- Etichetă: afișează pagina curentă și numărul total de pagini -->
                 <Label x:Name="lblPaginare" Content="Pagina 1 din 1" VerticalAlignment="Center" Margin="15,0,15,0" FontWeight="Bold" FontSize="14"/>
+                <!-- Buton: navighează la pagina următoare -->
                 <Button x:Name="btnPaginaUrmatoare" Content="Pagina Următoare 🡆" Width="140" Height="28" Background="#34495E" Foreground="White" Click="btnPaginaUrmatoare_Click"/>
             </StackPanel>
 
